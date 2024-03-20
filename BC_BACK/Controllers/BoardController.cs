@@ -53,7 +53,7 @@ namespace BC_BACK.Controllers
 
             return Ok(board);
         }
-
+        /*
         [HttpPost("CreateBoard")]
         [ProducesResponseType(204)]
         [ProducesResponseType(400)]
@@ -91,7 +91,7 @@ namespace BC_BACK.Controllers
             return Ok();
 
         }
-
+        */
         [HttpPut("Update")]
         [ProducesResponseType(400)]
         [ProducesResponseType(204)]

@@ -62,8 +62,8 @@ namespace BC_BACK.Controllers
         [ProducesResponseType(400)]
         public IActionResult LogIn(string username, string user_password)
         {
-
-
+            Console.WriteLine("1");
+            Console.WriteLine($"{username} + {user_password}");
             int id = _userRepository.GetId(username);
             if (!_userRepository.isUserExist(id))
                 return NotFound();

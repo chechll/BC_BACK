@@ -7,7 +7,7 @@ public partial class Game
 {
     public int IdGame { get; set; }
 
-    public DateTime DateGame { get; set; }
+    public DateTime? DateGame { get; set; }
 
     public int IdUser { get; set; }
 

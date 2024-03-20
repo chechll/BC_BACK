@@ -49,6 +49,11 @@ namespace BC_BACK.Repository
             return _context.Games.Where(p => p.IdUser == userID).ToList();
         }
 
+        public int GetIdByName(String name)
+        {
+            return _context.Games.Where(p => p.Name == name).FirstOrDefault().IdGame;
+        }
+
         public bool isGameExist(int id)
         {
             return _context.Games.Any(p => p.IdGame == id);

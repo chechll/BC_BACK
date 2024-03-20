@@ -44,6 +44,45 @@ namespace BC_BACK.Controllers
             }
         }
 
+        [HttpPost("CreateTasks")]
+        [ProducesResponseType(204)]
+        [ProducesResponseType(400)]
+        public IActionResult CreateTasks([FromBody] List<TaskDto> taskCreates)
+        {
+            if (taskCreates == null || !taskCreates.Any())
+            {
+                return BadRequest("No task provided");
+            }
+
+            if (taskCreates.Count() > 50 || taskCreates.Count() < 10)
+            {
+                return BadRequest("Wrong number of tasks provided");
+            }
+
+            foreach (var taskCreate in taskCreates)
+            {
+                if (taskCreate == null)
+                    return BadRequest();
+
+                if (!ModelState.IsValid)
+                    return BadRequest(ModelState);
+
+                if (!_gameRepository.isGameExist(taskCreate.IdGame) || !_checkDataRepository.IsSlovakWord(taskCreate.Answer) ||
+                    taskCreate.Number != null)
+                    return BadRequest();
+
+                var taskMap = _mapper.Map<Models.Task>(taskCreate);
+
+                if (!_taskRepository.CreateTask(taskMap))
+                {
+                    ModelState.AddModelError("", "Something went wrong");
+                    return StatusCode(500, ModelState);
+                }
+            }
+
+            return Ok();
+        }
+
         [HttpPost("CreateTask")]
         [ProducesResponseType(204)]
         [ProducesResponseType(400)]

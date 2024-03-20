@@ -33,6 +33,13 @@ namespace BC_BACK.Controllers
             _taskRepository = taskRepository;
         }
 
+        public class CreateData
+        {
+            public string name { get; set; }
+            public int idUser { get; set; }
+            public int size { get; set; }
+        }
+
         [HttpGet("GetAllGames")]
         [ProducesResponseType(200, Type = typeof(IEnumerable<Game>))]
         [ProducesResponseType(400)]
@@ -69,19 +76,37 @@ namespace BC_BACK.Controllers
         [HttpPost("CreateGame")]
         [ProducesResponseType(204)]
         [ProducesResponseType(400)]
-        public IActionResult CreateGame([FromBody] GameDto gameCreate)
+        public IActionResult CreateGame([FromBody] CreateData createData)
         {
+
+            var gameCreate = new GameDto
+            {
+                IdUser = createData.idUser,
+                Name = createData.name
+            };
             if (gameCreate == null)
                 return BadRequest();
 
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            if (!_userRepository.isUserExist(gameCreate.IdUser) || gameCreate.DateGame <= DateTime.Now)
-                return StatusCode(422);
+            if (!_userRepository.isUserExist(gameCreate.IdUser))
+            {
+                ModelState.AddModelError("", "Wrong idUser");
+                return StatusCode(422, ModelState);
+            }
 
-            if (_checkDataRepository.CheckStringLengs(gameCreate.Name, 20))
-                return StatusCode(422);
+            if (!_checkDataRepository.CheckStringLengs(gameCreate.Name, 20))
+            {
+                ModelState.AddModelError("", "Wrong Name");
+                return StatusCode(422, ModelState);
+            }
+
+            if (createData.size > 25 || createData.size < 9 || createData.size %2 != 1)
+            {
+                ModelState.AddModelError("", "Wrong size");
+                return StatusCode(422, ModelState);
+            }
 
             var gameMap = _mapper.Map<Game>(gameCreate);
 
@@ -91,7 +116,24 @@ namespace BC_BACK.Controllers
                 return StatusCode(500, ModelState);
             }
 
-            return Ok();
+            var idGame = _gameRepository.GetIdByName(gameCreate.Name);
+
+            var board = new BoardDto
+            {
+                Board1 = _boardRepository.BoardToString(_boardRepository.CreateBorad(createData.size)),
+                IdGame = idGame,                     
+                Size = createData.size                       
+            };
+
+            var boardMap = _mapper.Map<Board>(board);
+
+            if (!_boardRepository.CreateBoard(boardMap))
+            {
+                ModelState.AddModelError("", "Something went wrong creating board");
+                return StatusCode(500, ModelState);
+            }
+
+            return Ok(idGame);
 
         }
 
@@ -153,57 +195,44 @@ namespace BC_BACK.Controllers
         [ProducesResponseType(404)]
         public IActionResult DeleteGame(int idGame)
         {
-
-            if (!_gameRepository.isGameExist(idGame))
-            {
-                return NotFound();
-            }
-
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-
             var gameToDelete = _gameRepository.GetGame(idGame);
+            if (gameToDelete == null)
+                return NotFound();
 
-            var boardToDelete = _boardRepository.GetBoardsByGame(gameToDelete.IdGame).ToList();
-            if (!_boardRepository.DeleteBoards(boardToDelete))
+            var boardsToDelete = _boardRepository.GetBoardsByGame(idGame)?.ToList();
+            if (boardsToDelete != null && boardsToDelete.Any())
             {
-                ModelState.AddModelError("", "Something went wrong");
-                return StatusCode(500, ModelState);
+                if (!_boardRepository.DeleteBoards(boardsToDelete))
+                    return StatusCode(500, "Failed to delete boards.");
             }
 
-            var teamsToDelete = _teamRepository.GetTeamsByGame(gameToDelete.IdGame).ToList();
-            foreach (var team in teamsToDelete)
+            var teamsToDelete = _teamRepository.GetTeamsByGame(idGame)?.ToList();
+            if (teamsToDelete != null && teamsToDelete.Any())
             {
-                var ansToDelete = _answeredTaskRepository.GetATsByTeam(team.IdTeam).ToList();
-                if (_answeredTaskRepository.DeleteATs(ansToDelete))
+                foreach (var team in teamsToDelete)
                 {
-                    ModelState.AddModelError("", "Something went wrong");
-                    return StatusCode(500, ModelState);
+                    var answeredTasksToDelete = _answeredTaskRepository.GetATsByTeam(team.IdTeam)?.ToList();
+                    if (answeredTasksToDelete != null && answeredTasksToDelete.Any())
+                    {
+                        if (!_answeredTaskRepository.DeleteATs(answeredTasksToDelete))
+                            return StatusCode(500, "Failed to delete answered tasks.");
+                    }
                 }
+                if (!_teamRepository.DeleteTeams(teamsToDelete))
+                    return StatusCode(500, "Failed to delete teams.");
             }
 
-            if (!_teamRepository.DeleteTeams(teamsToDelete))
+            var tasksToDelete = _taskRepository.GetTasksByGame(idGame)?.ToList();
+            if (tasksToDelete != null && tasksToDelete.Any())
             {
-                ModelState.AddModelError("", "Something went wrong");
-                return StatusCode(500, ModelState);
+                if (!_taskRepository.DeleteTasks(tasksToDelete))
+                    return StatusCode(500, "Failed to delete tasks.");
             }
-
-            var tasksToDelete = _taskRepository.GetTasksByGame(gameToDelete.IdGame).ToList();
-            if (!_taskRepository.DeleteTasks(tasksToDelete))
-            {
-                ModelState.AddModelError("", "Something went wrong");
-                return StatusCode(500, ModelState);
-            }
-
 
             if (!_gameRepository.DeleteGame(gameToDelete))
-            {
-                ModelState.AddModelError("", "Something went wrong ");
-                return StatusCode(500, ModelState);
-            }
+                return StatusCode(500, "Failed to delete game.");
 
-            return Ok(0);
-
+            return NoContent();
         }
     }
 }

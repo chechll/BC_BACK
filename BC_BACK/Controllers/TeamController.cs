@@ -61,6 +61,54 @@ namespace BC_BACK.Controllers
             return Ok(team);
         }
 
+        [HttpPost("CreateTeams")]
+        [ProducesResponseType(204)]
+        [ProducesResponseType(400)]
+        public IActionResult CreateTeams([FromBody] List<TeamDto> teamCreates)
+        {
+            Console.WriteLine("mcdvmsd");
+            if (teamCreates == null || !teamCreates.Any())
+            {
+                return BadRequest("No teams provided");
+            }
+            Console.WriteLine("mcdvmsd");
+            if (teamCreates.Count() > 6 || teamCreates.Count() < 2)
+            {
+                return BadRequest("Wrong number of teams provided");
+            }
+            Console.WriteLine("mcdvmsd");
+            foreach (var teamCreate in teamCreates)
+            {
+                if (teamCreate == null)
+                    return BadRequest();
+
+                if (!ModelState.IsValid)
+                    return BadRequest(ModelState);
+
+                if (!_gameRepository.isGameExist(teamCreate.IdGame))
+                    return BadRequest();
+
+                var size = _teamRepository.GetBoardSize(teamCreate.IdGame);
+
+                if (_checkDataRepository.CheckStringLengs(teamCreate.Name, 20) || size < teamCreate.PositionY || teamCreate.PositionY < 0 ||
+                    teamCreate.PositionX > 0 || teamCreate.PositionX > size)
+                    return StatusCode(422);
+
+                string passwordHash = BCrypt.Net.BCrypt.EnhancedHashPassword(teamCreate.Password, 13);
+                teamCreate.Password = passwordHash;
+
+                var teamMap = _mapper.Map<Team>(teamCreate);
+
+                if (!_teamRepository.CreateTeam(teamMap))
+                {
+                    ModelState.AddModelError("", "Something went wrong");
+                    return StatusCode(500, ModelState);
+                }
+            }
+
+            return Ok();
+        }
+
         [HttpPost("CreateTeam")]
         [ProducesResponseType(204)]
         [ProducesResponseType(400)]

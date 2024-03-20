@@ -30,7 +30,7 @@ builder.Services.AddDbContext<BcDbContext>(options =>
 
 var app = builder.Build();
 
-//app.UseCors(policy => policy.WithOrigins("http://localhost:5173").AllowAnyHeader().AllowAnyMethod());
+app.UseCors(policy => policy.WithOrigins("http://localhost:5173").AllowAnyHeader().AllowAnyMethod());
 
 if (app.Environment.IsDevelopment())
 {
