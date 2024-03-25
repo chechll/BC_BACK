@@ -4,6 +4,7 @@
     {
         Team GetTeam(int id);
         int GetBoardSize(int idGame);
+        int GetId(string name);
         ICollection<Team> GetTeams();
         ICollection<Team> GetTeamsByGame(int gameId);
         bool isTeamExist(int id);

@@ -27,14 +27,14 @@ namespace BC_BACK.Controllers
             _checkDataRepository = checkDataRepository;
         }
 
-        [HttpGet("GetAllTasks")]
+        [HttpGet("GetTasks")]
         [ProducesResponseType(200, Type = typeof(IEnumerable<Models.Task>))]
         [ProducesResponseType(400)]
-        public IActionResult GetAllTasks()
+        public IActionResult GetAllTasks(int idGame)
         {
             try
             {
-                var allTask = _taskRepository.GetTasks();
+                var allTask = _taskRepository.GetTasksByGame(idGame);
 
                 return Ok(allTask);
             }
@@ -61,15 +61,15 @@ namespace BC_BACK.Controllers
 
             foreach (var taskCreate in taskCreates)
             {
-                if (taskCreate == null)
-                    return BadRequest();
 
                 if (!ModelState.IsValid)
                     return BadRequest(ModelState);
 
-                if (!_gameRepository.isGameExist(taskCreate.IdGame) || !_checkDataRepository.IsSlovakWord(taskCreate.Answer) ||
-                    taskCreate.Number != null)
-                    return BadRequest();
+                if (!_gameRepository.isGameExist(taskCreate.IdGame) ||
+                    taskCreate.Number == null)
+                {
+                    return BadRequest("Wrong Data");
+                }
 
                 var taskMap = _mapper.Map<Models.Task>(taskCreate);
 
@@ -88,15 +88,18 @@ namespace BC_BACK.Controllers
         [ProducesResponseType(400)]
         public IActionResult CreateTask([FromBody] TaskDto taskCreate)
         {
+            Console.WriteLine(1);
             if (taskCreate == null)
                 return BadRequest();
 
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            if (!_gameRepository.isGameExist(taskCreate.IdGame) || !_checkDataRepository.IsSlovakWord(taskCreate.Answer) || 
-                taskCreate.Number != null)
-                return BadRequest();
+            if (!_gameRepository.isGameExist(taskCreate.IdGame) ||
+                taskCreate.Number == null)
+            {
+                return BadRequest("Wrong Data");
+            }
 
             var taskMap = _mapper.Map<Models.Task>(taskCreate);
 
@@ -104,56 +107,68 @@ namespace BC_BACK.Controllers
             {
                 ModelState.AddModelError("", "Something went wrong");
                 return StatusCode(500, ModelState);
-            }
+            }   
 
             return Ok();
 
         }
 
-        [HttpPut("Update")]
+        [HttpPut("UpdateTasks")]
         [ProducesResponseType(400)]
         [ProducesResponseType(204)]
         [ProducesResponseType(404)]
         public IActionResult UpdateTask(
-            [FromForm] TaskDto updatedTask)
+            [FromBody] List<TaskDto> updatTask)
         {
-            bool isUpdateNeeded = false;
-            if (updatedTask == null)
-                return BadRequest(ModelState);
-
-            if (!_taskRepository.isTaskExist(updatedTask.IdTask))
-                return NotFound();
-
-            if (!ModelState.IsValid)
+            if (updatTask == null || !updatTask.Any())
             {
-                ModelState.AddModelError("", "Model state is not valid");
-                return BadRequest(ModelState);
+                return BadRequest("No teams provided");
+            }
+            if (updatTask.Count() > 50 || updatTask.Count() < 10)
+            {
+                return BadRequest("Wrong number of teams provided");
             }
 
-            if (!_checkDataRepository.IsSlovakWord(updatedTask.Answer))
-                return BadRequest(ModelState);
-
-            var task = _taskRepository.GetTask(updatedTask.IdTask);
-
-            if (updatedTask.Answer != task.Answer)
+            foreach (var updatedTask in updatTask)
             {
-                task.Answer = updatedTask.Answer;
-                isUpdateNeeded = true;
-            }
+                bool isUpdateNeeded = false;
+                if (updatedTask == null)
+                    return BadRequest(ModelState);
 
-            if (updatedTask.Question != task.Question)
-            {
-                task.Question = updatedTask.Question;
-                isUpdateNeeded = true;
-            }
+                if (!_taskRepository.isTaskExist(updatedTask.IdTask))
+                    return NotFound();
 
-            if (isUpdateNeeded)
-            {
-                var taskMap = _mapper.Map<Models.Task>(task);
-                if (!_taskRepository.UpdateTask(taskMap))
+                if (!ModelState.IsValid)
                 {
-                    ModelState.AddModelError("", "Something went wrong ");
-                    return StatusCode(500, ModelState);
+                    ModelState.AddModelError("", "Model state is not valid");
+                    return BadRequest(ModelState);
+                }
+
+                //if (!_checkDataRepository.IsSlovakWord(updatedTask.Answer))
+                //    return BadRequest(ModelState);
+
+                var task = _taskRepository.GetTask(updatedTask.IdTask);
+
+                if (updatedTask.Answer != task.Answer)
+                {
+                    task.Answer = updatedTask.Answer;
+                    isUpdateNeeded = true;
+                }
+
+                if (updatedTask.Question != task.Question)
+                {
+                    task.Question = updatedTask.Question;
+                    isUpdateNeeded = true;
+                }
+
+                if (isUpdateNeeded)
+                {
+                    var taskMap = _mapper.Map<Models.Task>(task);
+                    if (!_taskRepository.UpdateTask(taskMap))
+                    {
+                        ModelState.AddModelError("", "Something went wrong ");
+                        return StatusCode(500, ModelState);
+                    }
                 }
             }
             return Ok("Successfully updated");

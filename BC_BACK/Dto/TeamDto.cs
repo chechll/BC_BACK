@@ -17,5 +17,7 @@
         public int IdGame { get; set; }
 
         public int Score { get; set; }
+
+        public int? Steps { get; set; }
     }
 }

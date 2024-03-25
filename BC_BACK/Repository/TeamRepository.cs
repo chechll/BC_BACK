@@ -75,5 +75,10 @@ namespace BC_BACK.Repository
 
             return Save();
         }
+
+        public int GetId(string name)
+        {
+            return _context.Teams.Where(p => name.Equals(p.Name)).FirstOrDefault().IdTeam;
+        }
     }
 }

@@ -21,6 +21,8 @@ public partial class Team
 
     public int Score { get; set; }
 
+    public int? Steps { get; set; }
+
     public virtual ICollection<AnsweredTask> AnsweredTasks { get; set; } = new List<AnsweredTask>();
 
     public virtual Game IdGameNavigation { get; set; } = null!;

@@ -132,13 +132,13 @@ public partial class BcDbContext : DbContext
                 .HasMaxLength(30)
                 .IsUnicode(false)
                 .HasColumnName("name");
-            entity.Property(e => e.Password)
-                .HasMaxLength(20)
-                .IsUnicode(false)
-                .HasColumnName("password");
+            entity.Property(e => e.Password).HasColumnName("password");
             entity.Property(e => e.PositionX).HasColumnName("positionX");
             entity.Property(e => e.PositionY).HasColumnName("positionY");
             entity.Property(e => e.Score).HasColumnName("score");
+            entity.Property(e => e.Steps)
+                .HasDefaultValueSql("((0))")
+                .HasColumnName("steps");
 
             entity.HasOne(d => d.IdGameNavigation).WithMany(p => p.Teams)
                 .HasForeignKey(d => d.IdGame)
@@ -153,10 +153,7 @@ public partial class BcDbContext : DbContext
             entity.ToTable("User_");
 
             entity.Property(e => e.IdUser).HasColumnName("id_user");
-            entity.Property(e => e.Password)
-                .HasMaxLength(30)
-                .IsUnicode(false)
-                .HasColumnName("password");
+            entity.Property(e => e.Password).HasColumnName("password");
             entity.Property(e => e.Rights).HasColumnName("rights");
             entity.Property(e => e.Username)
                 .HasMaxLength(30)

@@ -171,8 +171,9 @@ namespace BC_BACK.Controllers
         [ProducesResponseType(204)]
         [ProducesResponseType(404)]
         public IActionResult UpdateUser(
-            [FromForm] UserDto updatedUser)
+            [FromBody] UserDto updatedUser)
         {
+            Console.WriteLine(1);
             bool isUpdateNeeded = false;
             if (updatedUser == null)
                 return BadRequest(ModelState);
@@ -210,8 +211,7 @@ namespace BC_BACK.Controllers
                 isUpdateNeeded = true;
             }
 
-            if (updatedUser.Password != user.Password)
-            {
+            
                 var changeMail = BCrypt.Net.BCrypt.EnhancedVerify(updatedUser.Password, user.Password);
                 if (!changeMail)
                 {
@@ -219,7 +219,6 @@ namespace BC_BACK.Controllers
                     user.Password = passwordHash;
                     isUpdateNeeded = true;
                 }
-            }
 
 
             if (isUpdateNeeded)

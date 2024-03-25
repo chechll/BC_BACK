@@ -3,6 +3,8 @@ using BC_BACK.Dto;
 using BC_BACK.Interfaces;
 using BC_BACK.Repository;
 using Microsoft.AspNetCore.Mvc;
+using System.Text;
+using System.Threading.Channels;
 using static BC_BACK.Controllers.UserController;
 
 namespace BC_BACK.Controllers
@@ -49,60 +51,27 @@ namespace BC_BACK.Controllers
             if (!_boardRepository.isBoardExist(id))
                 return NotFound();
 
-            var board = _mapper.Map<BoardDto>(_boardRepository.GetBoard(id)); ;
+            var board = _mapper.Map<BoardDto>(_boardRepository.GetBoardsByGame(id).FirstOrDefault()); ;
 
             return Ok(board);
         }
-        /*
-        [HttpPost("CreateBoard")]
-        [ProducesResponseType(204)]
-        [ProducesResponseType(400)]
-        public IActionResult CreateBoard([FromBody] BoardDto boardCreate)
+
+        public class BoardArrayModel
         {
-            if (boardCreate == null)
-                return BadRequest();
-
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-
-            var board = _boardRepository.GetBoards().Where(c => c.IdGame == boardCreate.IdGame).FirstOrDefault();
-
-            if (board != null)
-            {
-                ModelState.AddModelError("", "board already exists");
-                return StatusCode(422, ModelState);
-            }
-
-            if (boardCreate.Size % 2 != 1 || boardCreate.Size > 25 || boardCreate.Size < 9)
-            {
-                return StatusCode(422, "wrong data");
-            }
-
-            boardCreate.Board1 = _boardRepository.BoardToString(_boardRepository.CreateBorad(boardCreate.Size)); ;
-
-            var boardMap = _mapper.Map<Board>(boardCreate);
-
-            if (!_boardRepository.CreateBoard(boardMap))
-            {
-                ModelState.AddModelError("", "Something went wrong");
-                return StatusCode(500, ModelState);
-            }
-
-            return Ok();
-
+            public int IdBoard { get; set; }
+            public String Board1{ get; set; }
         }
-        */
-        [HttpPut("Update")]
+
+        [HttpPost("Update")]
         [ProducesResponseType(400)]
         [ProducesResponseType(204)]
         [ProducesResponseType(404)]
         public IActionResult UpdateBoard(
-            [FromForm] BoardDto updatedBoard)
+            [FromBody] BoardArrayModel updatedBoard)
         {
             bool isUpdateNeeded = false;
             if (updatedBoard == null)
                 return BadRequest(ModelState);
-
             if (!_boardRepository.isBoardExist(updatedBoard.IdBoard))
                 return NotFound();
 
@@ -112,21 +81,16 @@ namespace BC_BACK.Controllers
                 return BadRequest(ModelState);
             }
 
-            if(updatedBoard.Size % 2 != 1 || updatedBoard.IdGame != _boardRepository.GetBoard(updatedBoard.IdBoard).IdGame || updatedBoard.Size > 25 || updatedBoard.Size < 9)
-            { 
-                return StatusCode(422, "wrong data");
-            }
-
             var board = _boardRepository.GetBoard(updatedBoard.IdBoard);
-                    
-            if (updatedBoard.Size != board.Size)
-            {
-                board.Size = updatedBoard.Size;
-                isUpdateNeeded = true;
 
-                board.Board1 = _boardRepository.BoardToString(_boardRepository.CreateBorad(board.Size));
+            if (board.Board1 != updatedBoard.Board1 && board.Board1.Length == updatedBoard.Board1.Length)
+            {
+                board.Board1 = updatedBoard.Board1;
+                isUpdateNeeded = true;
             }
-            
+
+            Console.WriteLine("isupdate = " + isUpdateNeeded);
+
             if (isUpdateNeeded)
             {
                 var boardMap = _mapper.Map<Board>(board);
