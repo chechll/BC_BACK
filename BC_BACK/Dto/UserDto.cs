@@ -1,4 +1,6 @@
-﻿namespace BC_BACK.Dto
+﻿using System.Text.Json.Serialization;
+
+namespace BC_BACK.Dto
 {
     public class UserDto
     {
@@ -6,7 +8,7 @@
 
         public string Username { get; set; } = null!;
 
-        public string Password { get; set; } = null!;
+        public string Password { get; set; }
 
         public int Rights { get; set; }
     }

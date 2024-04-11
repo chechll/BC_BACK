@@ -1,18 +1,20 @@
-﻿using AT = BC_BACK.Models.AnsweredTask;
+﻿using BC_BACK.Models;
+using System.Collections.Generic;
 
 namespace BC_BACK.Interfaces
 {
     public interface IAnsweredTaskRepository
     {
-        AT GetAT(int id);
-        ICollection<AT> GetATs();
-        ICollection<AT> GetATsByTeam(int teamId);
-        ICollection<AT> GetATsByTask(int taskId);
+        bool CreateAT(AnsweredTask at);
+        bool DeleteAT(AnsweredTask at);
+        bool DeleteATs(List<AnsweredTask> ats);
+        AnsweredTask GetAT(int id);
+        ICollection<AnsweredTask> GetATs();
+        ICollection<AnsweredTask> GetATsByTask(int taskId);
+        ICollection<AnsweredTask> GetATsByTeam(int teamId);
         bool IsAT_Exist(int id);
         bool Save();
-        bool CreateAT(AT at);
-        bool DeleteAT(AT at);
-        bool DeleteATs(List<AT> ats);
-        bool UpdateAT(AT at);
+        bool UpdateAT(AnsweredTask at);
     }
 }
+

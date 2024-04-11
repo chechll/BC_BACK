@@ -1,4 +1,6 @@
-﻿namespace BC_BACK.Interfaces
+﻿using BC_BACK.Dto;
+
+namespace BC_BACK.Interfaces
 {
     public interface IGameRepository
     {

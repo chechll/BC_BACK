@@ -56,8 +56,14 @@ namespace BC_BACK.Repository
             startPosition = (int)((25 - size) / 2);
 
             for (int i = 0; i < size; i++)
+            {
                 for (int j = 0; j < size; j++)
+                {
                     matrix[i, j] = _board[startPosition + i, startPosition + j];
+                    Console.Write($"{matrix[i, j]} ");
+                }
+                Console.WriteLine();
+            }
 
             return matrix;
         }
@@ -66,9 +72,15 @@ namespace BC_BACK.Repository
         {
             StringBuilder sb = new StringBuilder();
 
-            foreach (int num in matrix)
+            int rows = matrix.GetLength(0);
+            int cols = matrix.GetLength(1);
+
+            for (int i = 0; i < rows; i++)
             {
-                sb.Append(num);
+                for (int j = 0; j < cols; j++)
+                {
+                    sb.Append(matrix[i, j]);
+                }
             }
 
             return sb.ToString();

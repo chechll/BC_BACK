@@ -16,6 +16,8 @@ namespace BC_BACK.Helper
             CreateMap<GameDto, Game>();
             CreateMap<Task, TaskDto>();
             CreateMap<TaskDto, Task>();
+            CreateMap<Task, Task1Dto>();
+            CreateMap<Task1Dto, Task>();
             CreateMap<Team, TeamDto>();
             CreateMap<TeamDto, Team>();
             CreateMap<AnsweredTask, AnsweredTaskDto>();

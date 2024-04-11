@@ -136,9 +136,6 @@ public partial class BcDbContext : DbContext
             entity.Property(e => e.PositionX).HasColumnName("positionX");
             entity.Property(e => e.PositionY).HasColumnName("positionY");
             entity.Property(e => e.Score).HasColumnName("score");
-            entity.Property(e => e.Steps)
-                .HasDefaultValueSql("((0))")
-                .HasColumnName("steps");
 
             entity.HasOne(d => d.IdGameNavigation).WithMany(p => p.Teams)
                 .HasForeignKey(d => d.IdGame)
