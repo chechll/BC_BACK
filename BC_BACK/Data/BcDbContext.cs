@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using BC_BACK.Models;
-using Microsoft.EntityFrameworkCore;
-
-namespace BC_BACK.Data;
+﻿namespace BC_BACK.Data;
 
 public partial class BcDbContext : DbContext
 {

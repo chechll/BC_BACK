@@ -2,12 +2,10 @@
 using BC_BACK.Data;
 using BC_BACK.Dto;
 using BC_BACK.Interfaces;
-using BC_BACK.Models;
 using BC_BACK.Repository;
 using BC_BACK.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
-using Microsoft.EntityFrameworkCore;
 
 namespace BC_BACK.Services
 {
