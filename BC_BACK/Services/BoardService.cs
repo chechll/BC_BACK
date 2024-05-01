@@ -10,20 +10,15 @@ namespace BC_BACK.Services
     {
         public readonly IMapper _mapper;
         public readonly IBoardRepository _boardRepository;
-        public readonly IGameRepository _gameRepository;
 
-        public BoardService(IGameRepository gameRepository, IMapper mapper, IBoardRepository boardRepository) 
+        public BoardService(IMapper mapper, IBoardRepository boardRepository) 
         {
             _mapper = mapper;
             _boardRepository = boardRepository;
-            _gameRepository = gameRepository;
         }
 
         public IActionResult GetBoard(int id)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-
             if (!_boardRepository.isBoardExist(id))
                 return NotFound();
 
@@ -34,34 +29,23 @@ namespace BC_BACK.Services
 
         public IActionResult UpdateBoard(BoardArrayModel updatedBoard)
         {
-            bool isUpdateNeeded = false;
             if (updatedBoard == null)
-                return BadRequest(ModelState);
+                return BadRequest("Invalid board data");
+
             if (!_boardRepository.isBoardExist(updatedBoard.IdBoard))
                 return NotFound();
 
             if (!ModelState.IsValid)
-            {
-                ModelState.AddModelError("", "Model state is not valid");
                 return BadRequest(ModelState);
-            }
 
             var board = _boardRepository.GetBoard(updatedBoard.IdBoard);
 
             if (board.Board1 != updatedBoard.Board1 && board.Board1.Length == updatedBoard.Board1.Length)
             {
                 board.Board1 = updatedBoard.Board1;
-                isUpdateNeeded = true;
-            }
-
-            if (isUpdateNeeded)
-            {
                 var boardMap = _mapper.Map<Board>(board);
                 if (!_boardRepository.UpdateBoard(boardMap))
-                {
-                    ModelState.AddModelError("", "Something went wrong ");
-                    return StatusCode(500, ModelState);
-                }
+                    return StatusCode(500, "Failed to update board.");
             }
             return Ok("Successfully updated");
         }

@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using BC_BACK.Services.Interfaces;
 using BC_BACK.Services;
 using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
 
 namespace BC_BACK.Controllers
 {
@@ -14,9 +15,24 @@ namespace BC_BACK.Controllers
     public class AnsweredTaskController : Controller
     {
         private readonly IAnsweredTaskService _answeredTaskService;
-        public AnsweredTaskController(IAnsweredTaskService answeredTaskService) 
+        private readonly IJwtService _jwtService;
+        public AnsweredTaskController(IAnsweredTaskService answeredTaskService, IJwtService jwtService)
         {
             _answeredTaskService = answeredTaskService;
+            _jwtService = jwtService;
+        }
+
+        private IActionResult ValidateTokenAndGetPrincipal()
+        {
+            var token = Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
+            var principal = _jwtService.GetPrincipalFromToken(token);
+
+            if (principal == null)
+            {
+                return Unauthorized();
+            }
+
+            return null;
         }
 
         [HttpGet("GetAns")]
@@ -24,6 +40,11 @@ namespace BC_BACK.Controllers
         [ProducesResponseType(400)]
         public IActionResult GetAns(int teamId)
         {
+            var validationError = ValidateTokenAndGetPrincipal();
+            if (validationError != null)
+            {
+                return validationError;
+            }
             return _answeredTaskService.GetAns(teamId);
         }
 
@@ -34,6 +55,11 @@ namespace BC_BACK.Controllers
         [ApiExplorerSettings(IgnoreApi = true)]
         public IActionResult CreateAns([FromBody] List<AnsweredTaskDto> ansTask)
         {
+            var validationError = ValidateTokenAndGetPrincipal();
+            if (validationError != null)
+            {
+                return validationError;
+            }
             return _answeredTaskService.CreateAns(ansTask);
         }
 
@@ -43,6 +69,11 @@ namespace BC_BACK.Controllers
         [ProducesResponseType(404)]
         public IActionResult CheckAns(int idTeam, int idTask, string answer)
         {
+            var validationError = ValidateTokenAndGetPrincipal();
+            if (validationError != null)
+            {
+                return validationError;
+            }
             return _answeredTaskService.CheckAns(idTeam, idTask, answer);
         }
     }

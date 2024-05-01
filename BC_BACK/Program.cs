@@ -15,11 +15,11 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 GameManager gameManager = new GameManager();
 
-
 builder.Services.AddControllers();
 builder.Services.AddControllers().AddJsonOptions(x =>
                 x.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles);
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
+
 // Configure JWT settings from appsettings.json
 builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("Jwt"));
 
@@ -61,7 +61,6 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
-// Add Swagger
 builder.Services.AddSwaggerGen();
 
 var app = builder.Build();

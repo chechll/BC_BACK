@@ -13,9 +13,24 @@ namespace BC_BACK.Controllers
     public class UserController : Controller
     {
         public readonly IUserService _userService;
-        public UserController(IUserService userService)
+        private readonly IJwtService _jwtService;
+        public UserController(IUserService userService, IJwtService jwtService)
         {
             _userService = userService;
+            _jwtService = jwtService;
+        }
+
+        private IActionResult ValidateTokenAndGetPrincipal()
+        {
+            var token = Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
+            var principal = _jwtService.GetPrincipalFromToken(token);
+
+            if (principal == null)
+            {
+                return Unauthorized();
+            }
+
+            return null;
         }
 
         [Authorize]
@@ -25,6 +40,11 @@ namespace BC_BACK.Controllers
         [ApiExplorerSettings(IgnoreApi = true)]
         public IActionResult GetAllUsers()
         {
+            var validationError = ValidateTokenAndGetPrincipal();
+            if (validationError != null)
+            {
+                return validationError;
+            }
             return _userService.GetAllUsers();
         }
 
@@ -43,6 +63,11 @@ namespace BC_BACK.Controllers
         [ProducesResponseType(400)]
         public IActionResult GetUser(int id)
         {
+            var validationError = ValidateTokenAndGetPrincipal();
+            if (validationError != null)
+            {
+                return validationError;
+            }
             return _userService.GetUser(id);
         }
 
@@ -64,6 +89,11 @@ namespace BC_BACK.Controllers
         public IActionResult UpdateUser(
             [FromBody] UserDto updatedUser)
         {
+            var validationError = ValidateTokenAndGetPrincipal();
+            if (validationError != null)
+            {
+                return validationError;
+            }
             return _userService.UpdateUser(updatedUser);
         }
 
@@ -76,6 +106,11 @@ namespace BC_BACK.Controllers
         public IActionResult UpdateUserRights(
             [FromBody] UserDto updatedUser)
         {
+            var validationError = ValidateTokenAndGetPrincipal();
+            if (validationError != null)
+            {
+                return validationError;
+            }
             return _userService.UpdateUserRights(updatedUser);
         }
 
@@ -87,6 +122,11 @@ namespace BC_BACK.Controllers
         [ApiExplorerSettings(IgnoreApi = true)]
         public IActionResult DeleteUser(int userId)
         {
+            var validationError = ValidateTokenAndGetPrincipal();
+            if (validationError != null)
+            {
+                return validationError;
+            }
             return _userService.DeleteUser(userId);
         }
 

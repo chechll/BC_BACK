@@ -1,7 +1,5 @@
 ﻿using BC_BACK.Data;
 using BC_BACK.Interfaces;
-using BC_BACK.Models;
-using System.Threading.Tasks;
 
 namespace BC_BACK.Repository
 {

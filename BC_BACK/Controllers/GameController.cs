@@ -11,9 +11,24 @@ namespace BC_BACK.Controllers
     public class GameController : Controller
     {
         private IGameServices _gameServices;
-        public GameController(IGameServices gameServices)
+        private readonly IJwtService _jwtService;
+        public GameController(IGameServices gameServices, IJwtService jwtService)
         {
             _gameServices = gameServices;
+            _jwtService = jwtService;
+        }
+
+        private IActionResult ValidateTokenAndGetPrincipal()
+        {
+            var token = Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
+            var principal = _jwtService.GetPrincipalFromToken(token);
+
+            if (principal == null)
+            {
+                return Unauthorized();
+            }
+
+            return null;
         }
 
         [Authorize]
@@ -22,6 +37,11 @@ namespace BC_BACK.Controllers
         [ProducesResponseType(400)]
         public IActionResult GetAllGames(int idUser)
         {
+            var validationError = ValidateTokenAndGetPrincipal();
+            if (validationError != null)
+            {
+                return validationError;
+            }
             return _gameServices.GetAllGames(idUser);
         }
 
@@ -32,6 +52,11 @@ namespace BC_BACK.Controllers
         [ApiExplorerSettings(IgnoreApi = true)]
         public IActionResult GetGameData(int id)
         {
+            var validationError = ValidateTokenAndGetPrincipal();
+            if (validationError != null)
+            {
+                return validationError;
+            }
             return _gameServices.GetGameData(id);
         }
 
@@ -42,6 +67,11 @@ namespace BC_BACK.Controllers
         [ApiExplorerSettings(IgnoreApi = true)]
         public IActionResult CloneGame(int idGame)
         {
+            var validationError = ValidateTokenAndGetPrincipal();
+            if (validationError != null)
+            {
+                return validationError;
+            }
             return _gameServices.CloneGame(idGame);
         }
 
@@ -61,6 +91,11 @@ namespace BC_BACK.Controllers
         [ApiExplorerSettings(IgnoreApi = true)]
         public IActionResult CreateGame([FromBody] CreateData createData)
         {
+            var validationError = ValidateTokenAndGetPrincipal();
+            if (validationError != null)
+            {
+                return validationError;
+            }
             return _gameServices.CreateGame(createData);
         }
 
@@ -84,6 +119,11 @@ namespace BC_BACK.Controllers
         [ApiExplorerSettings(IgnoreApi = true)]
         public IActionResult DeleteGame(int idGame)
         {
+            var validationError = ValidateTokenAndGetPrincipal();
+            if (validationError != null)
+            {
+                return validationError;
+            }
             return _gameServices.DeleteGame(idGame);
         }
 
@@ -95,6 +135,11 @@ namespace BC_BACK.Controllers
         [ApiExplorerSettings(IgnoreApi = true)]
         public IActionResult StartGame(int idGame)
         {
+            var validationError = ValidateTokenAndGetPrincipal();
+            if (validationError != null)
+            {
+                return validationError;
+            }
             return _gameServices.StartGame(idGame);
         }
 
@@ -106,6 +151,11 @@ namespace BC_BACK.Controllers
         [ApiExplorerSettings(IgnoreApi = true)]
         public IActionResult EndGame(int idGame)
         {
+            var validationError = ValidateTokenAndGetPrincipal();
+            if (validationError != null)
+            {
+                return validationError;
+            }
             return _gameServices.EndGame(idGame);
         }
 
@@ -128,6 +178,11 @@ namespace BC_BACK.Controllers
         [ApiExplorerSettings(IgnoreApi = true)]
         public IActionResult RemoveTeam(int idTeam)
         {
+            var validationError = ValidateTokenAndGetPrincipal();
+            if (validationError != null)
+            {
+                return validationError;
+            }
             return _gameServices.RemoveTeam(idTeam);
         }
 
@@ -136,7 +191,7 @@ namespace BC_BACK.Controllers
         [ProducesResponseType(400)]
         [ProducesResponseType(204)]
         [ProducesResponseType(404)]
-        //[ApiExplorerSettings(IgnoreApi = true)]
+        [ApiExplorerSettings(IgnoreApi = true)]
         public IActionResult CheckCurrent(int idTeam)
         {
             return _gameServices.CheckCurrent(idTeam);
@@ -161,6 +216,11 @@ namespace BC_BACK.Controllers
         [ApiExplorerSettings(IgnoreApi = true)]
         public IActionResult GetCurrentTeam(int idTeam, int idGame)
         {
+            var validationError = ValidateTokenAndGetPrincipal();
+            if (validationError != null)
+            {
+                return validationError;
+            }
             return _gameServices.GetCurrentTeam(idTeam, idGame);
         }
 
@@ -172,6 +232,11 @@ namespace BC_BACK.Controllers
         [ApiExplorerSettings(IgnoreApi = true)]
         public IActionResult UpdateCurrentTeam(TeamDto idTeam)
         {
+            var validationError = ValidateTokenAndGetPrincipal();
+            if (validationError != null)
+            {
+                return validationError;
+            }
             return _gameServices.UpdateCurrentTeam(idTeam);
         }
 
@@ -183,6 +248,11 @@ namespace BC_BACK.Controllers
         [ApiExplorerSettings(IgnoreApi = true)]
         public IActionResult CheckGame(int idGame)
         {
+            var validationError = ValidateTokenAndGetPrincipal();
+            if (validationError != null)
+            {
+                return validationError;
+            }
             return _gameServices.CheckaGame(idGame);
         }
     }

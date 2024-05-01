@@ -10,17 +10,38 @@ namespace BC_BACK.Controllers
     public class TeamController : Controller
     {
         public readonly ITeamService _teamService;
+        private readonly IJwtService _jwtService;
 
-        public TeamController(ITeamService teamService)
+        public TeamController(ITeamService teamService, IJwtService jwtService)
         {
             _teamService = teamService;
+            _jwtService = jwtService;
         }
+
+        private IActionResult ValidateTokenAndGetPrincipal()
+        {
+            var token = Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
+            var principal = _jwtService.GetPrincipalFromToken(token);
+
+            if (principal == null)
+            {
+                return Unauthorized();
+            }
+
+            return null;
+        }
+
         [Authorize]
         [HttpGet("GetTeams")]
         [ProducesResponseType(200, Type = typeof(IEnumerable<Team>))]
         [ProducesResponseType(400)]
         public IActionResult GetAllTeams(int idGame)
         {
+            var validationError = ValidateTokenAndGetPrincipal();
+            if (validationError != null)
+            {
+                return validationError;
+            }
             return _teamService.GetAllTeams(idGame);
         }
 
@@ -31,6 +52,7 @@ namespace BC_BACK.Controllers
         {
             return _teamService.LogIn(password, id);
         }
+
         [Authorize]
         [HttpPost("CreateTeams")]
         [ProducesResponseType(204)]
@@ -38,8 +60,14 @@ namespace BC_BACK.Controllers
         [ApiExplorerSettings(IgnoreApi = true)]
         public IActionResult CreateTeams([FromBody] List<TeamDto> teamCreates)
         {
+            var validationError = ValidateTokenAndGetPrincipal();
+            if (validationError != null)
+            {
+                return validationError;
+            }
             return _teamService.CreateTeams(teamCreates);
         }
+
         [Authorize]
         [HttpPut("UpdateTeams")]
         [ProducesResponseType(400)]
@@ -49,8 +77,14 @@ namespace BC_BACK.Controllers
         public IActionResult UpdateTeams(
             [FromBody] List<TeamDto> updatTeam)
         {
+            var validationError = ValidateTokenAndGetPrincipal();
+            if (validationError != null)
+            {
+                return validationError;
+            }
             return _teamService.UpdateTeams(updatTeam);
         }
+
         [Authorize]
         [HttpPut("UpdateTeam")]
         [ProducesResponseType(400)]
@@ -60,6 +94,11 @@ namespace BC_BACK.Controllers
         public IActionResult UpdateTeam(
             [FromBody] TeamDto updatedTeam)
         {
+            var validationError = ValidateTokenAndGetPrincipal();
+            if (validationError != null)
+            {
+                return validationError;
+            }
             return _teamService.UpdateTeam(updatedTeam);
         }
     }

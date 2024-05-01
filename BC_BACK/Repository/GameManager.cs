@@ -1,16 +1,9 @@
-﻿using BC_BACK.Interfaces;
-using BC_BACK.Models;
-using Microsoft.AspNetCore.Http.HttpResults;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-
-namespace BC_BACK.Repository
+﻿namespace BC_BACK.Repository
 {
     public class GameManager
     {
-        private static Queue<Game> _activeGames;
-        private static Dictionary<int, List<Team>> _gameTeams;
+        private static Queue<Game>? _activeGames;
+        private static Dictionary<int, List<Team>>? _gameTeams;
 
         public GameManager()
         {
@@ -25,11 +18,8 @@ namespace BC_BACK.Repository
             {
                 if (game.getCurrentTeamId() == idTeam) {
                     return "Ok";
-                } 
-                else
-                {
-                    return "Still not current";
                 }
+                return "Still not current";
             }
             return "There is no such team in active games";
         }
@@ -93,20 +83,16 @@ namespace BC_BACK.Repository
             if (_activeGames.Count > 0)
             {
                 var firstGame = _activeGames.Peek();
-                await System.Threading.Tasks.Task.Delay(TimeSpan.FromMinutes(60));
+                await System.Threading.Tasks.Task.Delay(TimeSpan.FromMinutes(120));
                 _activeGames.Dequeue();
                 return $"Game {firstGame.Name} removed after waiting for a 60 minutes.";
             }
             return "There are no games in the queue.";
         }
 
-        public List<Team> GetGameTeams(int gameId)
+        public List<Team>? GetGameTeams(int gameId)
         {
-            if (_gameTeams.TryGetValue(gameId, out var teams))
-            {
-                return teams;
-            }
-            return null;
+            return _gameTeams.TryGetValue(gameId, out var teams) ? teams : null;
         }
 
         private List<Team> ResetStepsForTeams(List<Team> teams)
@@ -118,36 +104,9 @@ namespace BC_BACK.Repository
             return teams;
         }
 
-        public void IncreaseStepsForTeam(int gameId, int teamId)
+        public Team? GetTeam (int idGame, int idTeam)
         {
-            if (_gameTeams.TryGetValue(gameId, out var teams))
-            {
-                var teamToUpdate = teams.FirstOrDefault(team => team.IdTeam == teamId);
-                if (teamToUpdate != null)
-                {
-                    teamToUpdate.Steps++;
-                }
-                else
-                {
-                    Console.WriteLine("Team not found for the given teamId.");
-                }
-            }
-            else
-            {
-                Console.WriteLine("No teams found for the given gameId.");
-            }
-        }
-
-        public Team GetTeam (int idGame, int idTeam)
-        {
-            if (_gameTeams.TryGetValue(idGame, out var teams))
-            {
-                return teams.FirstOrDefault(team => team.IdTeam == idTeam);
-            }
-            else
-            {
-                return null;
-            }
+            return _gameTeams.TryGetValue(idGame, out var teams) ? teams.FirstOrDefault(team => team.IdTeam == idTeam) : null;
         }
 
         public string UpdateTeam(Team updatedTeam)
@@ -160,24 +119,14 @@ namespace BC_BACK.Repository
                     teams[existingTeamIndex] = updatedTeam;
                     return "Ok";
                 }
-                else
-                {
-                    return "Team not found for the given teamId.";
-                }
+                return "Team not found for the given teamId.";
             }
-            else
-            {
-                return "No teams found for the given gameId.";
-            }
+            return "No teams found for the given gameId.";
         }
 
         public string CheckGame(int idGame)
         {
-            if (_activeGames.Any(g => g.IdGame == idGame))
-            {
-                return "Yes";
-            }
-            return "No";
+            return _activeGames.Any(g => g.IdGame == idGame) ? "Yes" : "No";
         }
     }
 }

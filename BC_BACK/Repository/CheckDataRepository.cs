@@ -1,5 +1,4 @@
-﻿using BC_BACK.Dto;
-using BC_BACK.Interfaces;
+﻿using BC_BACK.Interfaces;
 using System.Text.RegularExpressions;
 
 namespace BC_BACK.Repository
@@ -22,11 +21,6 @@ namespace BC_BACK.Repository
             if (string.IsNullOrWhiteSpace(input))
                 return false;
             return _slovakWordRegex.IsMatch(input);
-        }
-
-        public string CheckUser(UserDto user)
-        {
-            throw new NotImplementedException();
         }
     }
 }

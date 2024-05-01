@@ -17,9 +17,24 @@ namespace BC_BACK.Controllers
     public class BoardController : Controller
     {
         public readonly IBoardService _boardService;
-        public BoardController(IBoardService boardService) 
+        private readonly IJwtService _jwtService;
+        public BoardController(IBoardService boardService, IJwtService jwtService) 
         {
             _boardService = boardService;
+            _jwtService = jwtService;
+        }
+
+        private IActionResult ValidateTokenAndGetPrincipal()
+        {
+            var token = Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
+            var principal = _jwtService.GetPrincipalFromToken(token);
+
+            if (principal == null)
+            {
+                return Unauthorized();
+            }
+
+            return null;
         }
 
         [HttpGet("GetBoard")]
@@ -27,6 +42,11 @@ namespace BC_BACK.Controllers
         [ProducesResponseType(400)]
         public IActionResult GetBoard(int id)
         {
+            var validationError = ValidateTokenAndGetPrincipal();
+            if (validationError != null)
+            {
+                return validationError;
+            }
             return _boardService.GetBoard(id);
             
         }
@@ -39,6 +59,11 @@ namespace BC_BACK.Controllers
         public IActionResult UpdateBoard(
             [FromBody] BoardArrayModel updatedBoard)
         {
+            var validationError = ValidateTokenAndGetPrincipal();
+            if (validationError != null)
+            {
+                return validationError;
+            }
             return _boardService.UpdateBoard(updatedBoard);
         }
     }

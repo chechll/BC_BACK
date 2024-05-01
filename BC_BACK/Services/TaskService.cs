@@ -11,53 +11,12 @@ namespace BC_BACK.Services
         public readonly IMapper _mapper;
         public readonly ITaskRepository _taskRepository;
         public readonly IGameRepository _gameRepository;
-        public readonly IAnsweredTaskRepository _answeredTaskRepository;
-        public readonly ICheckDataRepository _checkDataRepository;
 
-        public TaskService(IMapper mapper, ITaskRepository taskRepository,
-            IGameRepository gameRepository, IAnsweredTaskRepository answeredTaskRepository, ICheckDataRepository checkDataRepository)
+        public TaskService(IMapper mapper, ITaskRepository taskRepository, IGameRepository gameRepository)
         {
             _gameRepository = gameRepository;
             _mapper = mapper;
             _taskRepository = taskRepository;
-            _answeredTaskRepository = answeredTaskRepository;
-            _checkDataRepository = checkDataRepository;
-        }
-
-        public IActionResult CreateTasks(List<TaskDto> taskCreates)
-        {
-            if (taskCreates == null || !taskCreates.Any())
-            {
-                return BadRequest("No task provided");
-            }
-
-            if (taskCreates.Count() > 50 || taskCreates.Count() < 10)
-            {
-                return BadRequest("Wrong number of tasks provided");
-            }
-
-            foreach (var taskCreate in taskCreates)
-            {
-
-                if (!ModelState.IsValid)
-                    return BadRequest(ModelState);
-
-                if (!_gameRepository.isGameExist(taskCreate.IdGame) ||
-                    taskCreate.Number == null)
-                {
-                    return BadRequest("Wrong Data");
-                }
-
-                var taskMap = _mapper.Map<Models.Task>(taskCreate);
-
-                if (!_taskRepository.CreateTask(taskMap))
-                {
-                    ModelState.AddModelError("", "Something went wrong");
-                    return StatusCode(500, ModelState);
-                }
-            }
-
-            return Ok();
         }
 
         public IActionResult GetAllTasks(int idGame)
@@ -88,33 +47,51 @@ namespace BC_BACK.Services
             }
         }
 
+        public IActionResult CreateTasks(List<TaskDto> taskCreates)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            if (taskCreates == null || !taskCreates.Any())
+                return BadRequest("No task provided");
+
+            if (taskCreates.Count() > 50 || taskCreates.Count() < 10)
+                return BadRequest("Wrong number of tasks provided");
+
+
+            foreach (var taskCreate in taskCreates)
+            {
+
+                if (!_gameRepository.isGameExist(taskCreate.IdGame) || taskCreate.Number == null)
+                    return BadRequest("Invalid data");
+
+                var taskMap = _mapper.Map<Models.Task>(taskCreate);
+
+                if (!_taskRepository.CreateTask(taskMap))
+                    return StatusCode(500, "Failed to create tasks");
+            }
+
+            return Ok();
+        }
+
         public IActionResult UpdateTasks(List<TaskDto> updatTask)
         {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
             if (updatTask == null || !updatTask.Any())
-            {
-                return BadRequest("No teams provided");
-            }
+                return BadRequest("No tasks provided");
+
             if (updatTask.Count() > 50 || updatTask.Count() < 10)
-            {
                 return BadRequest("Wrong number of teams provided");
-            }
 
             foreach (var updatedTask in updatTask)
             {
-                bool isUpdateNeeded = false;
-                if (updatedTask == null)
-                    return BadRequest(ModelState);
-
                 if (!_taskRepository.isTaskExist(updatedTask.IdTask))
                     return NotFound();
 
-                if (!ModelState.IsValid)
-                {
-                    ModelState.AddModelError("", "Model state is not valid");
-                    return BadRequest(ModelState);
-                }
-
                 var task = _taskRepository.GetTask(updatedTask.IdTask);
+                bool isUpdateNeeded = false;
 
                 if (updatedTask.Answer != task.Answer)
                 {
@@ -132,10 +109,7 @@ namespace BC_BACK.Services
                 {
                     var taskMap = _mapper.Map<Models.Task>(task);
                     if (!_taskRepository.UpdateTask(taskMap))
-                    {
-                        ModelState.AddModelError("", "Something went wrong ");
-                        return StatusCode(500, ModelState);
-                    }
+                        return StatusCode(500, "Failed to update tasks");
                 }
             }
             return Ok("Successfully updated");

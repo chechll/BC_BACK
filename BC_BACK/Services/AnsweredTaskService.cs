@@ -1,12 +1,8 @@
 ﻿using AutoMapper;
 using BC_BACK.Dto;
 using BC_BACK.Interfaces;
-using BC_BACK.Models;
 using BC_BACK.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace BC_BACK.Services
 {
@@ -28,43 +24,29 @@ namespace BC_BACK.Services
 
         public IActionResult CheckAns(int idTeam, int idTask, string answer)
         {
-            if (idTeam != null && idTask != null && answer != null)
-            {
-                var taskExists = _taskRepository.isTaskExist(idTask);
-                var teamExists = _teamRepository.isTeamExist(idTeam);
+            var taskExists = _taskRepository.isTaskExist(idTask);
+            var teamExists = _teamRepository.isTeamExist(idTeam);
 
-                if (taskExists && teamExists)
-                {
-                    var team = _teamRepository.GetTeam(idTeam);
-                    var task = _taskRepository.GetTask(idTask);
-
-                    if (team.IdGame == task.IdGame && task.Answer == answer)
-                    {
-                        var existingAT = _ansRepository.GetATs().FirstOrDefault(at => at.IdTask == idTask && at.IdTeam == idTeam);
-
-                        if (existingAT == null)
-                        {
-                            AnsweredTaskDto answeredTaskDto = new()
-                            {
-                                IdTask = idTask,
-                                IdTeam = idTeam,
-                            };
-                            AnsweredTaskDto answeredTask = answeredTaskDto;
-
-                            var ansMap = _mapper.Map<AnsweredTask>(answeredTask);
-
-                            if (!_ansRepository.CreateAT(ansMap))
-                            {
-                                ModelState.AddModelError("", "Failed to create answered task.");
-                                return StatusCode(500, ModelState);
-                            }
-                            return Ok(1);
-                        }
-                    }
-                }
+            if (!taskExists || !teamExists)
                 return BadRequest("there is already such answer");
+
+            var team = _teamRepository.GetTeam(idTeam);
+            var task = _taskRepository.GetTask(idTask);
+
+            if (team.IdGame == task.IdGame && task.Answer == answer)
+                return BadRequest("Invalid team, task, or answer.");
+
+            if (_ansRepository.GetATs().Any(at => at.IdTask == idTask && at.IdTeam == idTeam))
+                return BadRequest("An answer already exists for this team and task.");
+
+            var ansMap = _mapper.Map<AnsweredTask>(new AnsweredTaskDto { IdTask = idTask, IdTeam = idTeam });
+
+            if (!_ansRepository.CreateAT(ansMap))
+            {
+                ModelState.AddModelError("", "Failed to create answered task.");
+                return StatusCode(500, ModelState);
             }
-            return BadRequest();
+            return Ok(1);
         }
 
         public IActionResult CreateAns(List<AnsweredTaskDto> ansTasks)
@@ -78,32 +60,22 @@ namespace BC_BACK.Services
             {
                 foreach (var answeredTask in ansTasks)
                 {
-                    if (answeredTask != null)
+                    if (_taskRepository.isTaskExist(answeredTask.IdTask) &&
+                    _teamRepository.isTeamExist(answeredTask.IdTeam) &&
+                    !_ansRepository.IsAT_Exist(answeredTask.Id))
                     {
-                        var taskExists = _taskRepository.isTaskExist(answeredTask.IdTask);
-                        var teamExists = _teamRepository.isTeamExist(answeredTask.IdTeam);
-                        var ansExists = _ansRepository.IsAT_Exist(answeredTask.Id);
+                        var team = _teamRepository.GetTeam(answeredTask.IdTeam);
+                        var task = _taskRepository.GetTask(answeredTask.IdTask);
 
-                        if (taskExists && teamExists && !ansExists)
+                        if (team.IdGame == task.IdGame && _ansRepository.GetATs().FirstOrDefault(at => at.IdTask == answeredTask.IdTask && at.IdTeam == answeredTask.IdTeam) == null)
                         {
-                            var team = _teamRepository.GetTeam(answeredTask.IdTeam);
-                            var task = _taskRepository.GetTask(answeredTask.IdTask);
 
-                            if (team.IdGame == task.IdGame)
+                            if (!_ansRepository.CreateAT(_mapper.Map<AnsweredTask>(answeredTask)))
                             {
-                                var existingAT = _ansRepository.GetATs().FirstOrDefault(at => at.IdTask == answeredTask.IdTask && at.IdTeam == answeredTask.IdTeam);
-
-                                if (existingAT == null)
-                                {
-                                    var ansMap = _mapper.Map<AnsweredTask>(answeredTask);
-
-                                    if (!_ansRepository.CreateAT(ansMap))
-                                    {
-                                        ModelState.AddModelError("", "Failed to create answered task.");
-                                        return StatusCode(500, ModelState);
-                                    }
-                                }
+                                ModelState.AddModelError("", "Failed to create answered task.");
+                                return StatusCode(500, ModelState);
                             }
+
                         }
                     }
                 }
@@ -112,7 +84,6 @@ namespace BC_BACK.Services
             }
             catch (Exception ex)
             {
-                // Log the exception
                 return StatusCode(500);
             }
         }
@@ -128,7 +99,6 @@ namespace BC_BACK.Services
             }
             catch (Exception ex)
             {
-                // Log the exception
                 return StatusCode(500);
             }
         }
