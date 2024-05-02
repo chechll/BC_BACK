@@ -19,10 +19,11 @@ namespace BC_BACK.Services
 
         public IActionResult GetBoard(int id)
         {
-            if (!_boardRepository.isBoardExist(id))
+            Console.WriteLine(id);
+            var board = _boardRepository.GetBoardsByGame(id).FirstOrDefault();
+            Console.WriteLine(board);
+            if (!_boardRepository.isBoardExist(board.IdBoard))
                 return NotFound();
-
-            var board = _mapper.Map<BoardDto>(_boardRepository.GetBoardsByGame(id).FirstOrDefault()); ;
 
             return Ok(board);
         }

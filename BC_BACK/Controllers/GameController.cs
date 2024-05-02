@@ -61,6 +61,21 @@ namespace BC_BACK.Controllers
         }
 
         [Authorize]
+        [HttpGet("CheckGameData")]
+        [ProducesResponseType(200, Type = typeof(IEnumerable<Game>))]
+        [ProducesResponseType(400)]
+        [ApiExplorerSettings(IgnoreApi = true)]
+        public IActionResult CheckGameData(int id)
+        {
+            var validationError = ValidateTokenAndGetPrincipal();
+            if (validationError != null)
+            {
+                return validationError;
+            }
+            return _gameServices.CheckGameData(id);
+        }
+
+        [Authorize]
         [HttpGet("CloneGame")]
         [ProducesResponseType(204)]
         [ProducesResponseType(400)]

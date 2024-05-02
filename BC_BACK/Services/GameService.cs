@@ -43,18 +43,73 @@ namespace BC_BACK.Services
         // crud functions
         public IActionResult GetGameData(int id)
         {
+            Console.WriteLine(id);
             if (!_gameRepository.isGameExist(id))
                 return BadRequest("No such game");
 
-            return Ok(new DataForUpdate
+            Console.WriteLine("id");
+            try
             {
-                Name = _gameRepository.GetGame(id).Name,
-                Size = _boardRepository.GetBoardsByGame(id).First().Size,
-                NumberOfTasks = _taskRepository.GetTasksByGame(id).Count(),
-                NumberOfTeams = _teamRepository.GetTeamsByGame(id).Count(),
-                EnQuestions = _taskRepository.GetTasksByGame(id).First().Question != null,
-                IdGame = id,
-            });
+                var nftm = 2;
+                var nftk = 10;
+
+                var boards = _boardRepository.GetBoardsByGame(id);
+                var tasks = _taskRepository.GetTasksByGame(id);
+                var teams = _teamRepository.GetTeamsByGame(id);
+
+                if (!boards.Any())
+                {
+                    return BadRequest("No boards");
+                }
+
+                if (tasks.Any())
+                {
+                    nftk = tasks.Count();
+                }
+
+                if (teams.Any())
+                {
+                    nftm = teams.Count();
+                }
+
+                var size = boards.First().Size;
+
+                return Ok(new DataForUpdate
+                {
+                    Name = _gameRepository.GetGame(id).Name,
+                    Size = size,
+                    NumberOfTasks = nftk,
+                    NumberOfTeams = nftm,
+                    EnQuestions = false,
+                    IdGame = id,
+                });
+
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex);
+                return BadRequest(ex.Message);
+            }
+        }
+
+        public IActionResult CheckGameData(int id)
+        {
+            Console.WriteLine(id);
+            bool gameExists = _gameRepository.isGameExist(id);
+            bool boardExists = _boardRepository.GetBoardsByGame(id).FirstOrDefault() != null;
+            bool tasksExist = _taskRepository.GetTasksByGame(id).Any();
+            bool teamsExist = _teamRepository.GetTeamsByGame(id).Any();
+
+            if (gameExists && boardExists && tasksExist && teamsExist)
+            {
+                Console.WriteLine("true");
+                return Ok();
+            }
+            else
+            {
+                Console.WriteLine($"false {gameExists} | {boardExists} | {tasksExist} | {teamsExist}");
+                return BadRequest();
+            }
         }
 
         public IActionResult GetAllGames(int idUser)
@@ -249,6 +304,9 @@ namespace BC_BACK.Services
                 Name = game1.Name,
                 IdUser = game1.IdUser,
             };
+
+            if (!_gameRepository.CreateGame(game))
+                return StatusCode(500, "Failed to clone game");
 
             int id = _gameRepository.GetGames().Max(g => g.IdGame);
 

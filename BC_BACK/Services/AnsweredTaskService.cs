@@ -28,13 +28,17 @@ namespace BC_BACK.Services
             var teamExists = _teamRepository.isTeamExist(idTeam);
 
             if (!taskExists || !teamExists)
-                return BadRequest("there is already such answer");
+                return BadRequest("invalid data");
 
             var team = _teamRepository.GetTeam(idTeam);
             var task = _taskRepository.GetTask(idTask);
 
-            if (team.IdGame == task.IdGame && task.Answer == answer)
+            if (team.IdGame != task.IdGame)
                 return BadRequest("Invalid team, task, or answer.");
+
+            Console.WriteLine(task.Answer + " " + answer);
+            if (task.Answer != answer)
+                return StatusCode(422, "Wrong answer");
 
             if (_ansRepository.GetATs().Any(at => at.IdTask == idTask && at.IdTeam == idTeam))
                 return BadRequest("An answer already exists for this team and task.");
@@ -71,10 +75,7 @@ namespace BC_BACK.Services
                         {
 
                             if (!_ansRepository.CreateAT(_mapper.Map<AnsweredTask>(answeredTask)))
-                            {
-                                ModelState.AddModelError("", "Failed to create answered task.");
-                                return StatusCode(500, ModelState);
-                            }
+                                return StatusCode(500, "Failed to create answered task.");
 
                         }
                     }

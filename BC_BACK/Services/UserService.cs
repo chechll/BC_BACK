@@ -73,7 +73,7 @@ namespace BC_BACK.Services
             var existingUser = _userRepository.GetUsers().Where(c => c.Username == userCreate.Username).FirstOrDefault();
 
             if (existingUser != null)
-                return StatusCode(422, ModelState);
+                return StatusCode(422, "There is user with such username");
 
             userCreate.Rights = 0;
             userCreate.Password = BCrypt.Net.BCrypt.EnhancedHashPassword(userCreate.Password, 13);

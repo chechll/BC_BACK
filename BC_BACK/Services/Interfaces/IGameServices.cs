@@ -8,6 +8,7 @@ namespace BC_BACK.Services.Interfaces
         IActionResult AddTeam(int idTeam);
         IActionResult CheckaGame(int idGame);
         IActionResult CheckCurrent(int idTeam);
+        IActionResult CheckGameData(int id);
         IActionResult CloneGame(int idGame);
         IActionResult CreateGame(CreateData createData);
         IActionResult DateGame(int idGame);
