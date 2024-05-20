@@ -27,7 +27,7 @@ namespace BC_BACK.Services
 
                 return Ok(allTask);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return StatusCode(500);
             }
@@ -41,7 +41,7 @@ namespace BC_BACK.Services
 
                 return Ok(allTask);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return StatusCode(500);
             }
@@ -55,14 +55,14 @@ namespace BC_BACK.Services
             if (taskCreates == null || !taskCreates.Any())
                 return BadRequest("No task provided");
 
-            if (taskCreates.Count() > 50 || taskCreates.Count() < 10)
+            if (taskCreates.Count > 50 || taskCreates.Count < 10)
                 return BadRequest("Wrong number of tasks provided");
 
 
             foreach (var taskCreate in taskCreates)
             {
 
-                if (!_gameRepository.isGameExist(taskCreate.IdGame) || taskCreate.Number == null)
+                if (!_gameRepository.isGameExist(taskCreate.IdGame))
                     return BadRequest("Invalid data");
 
                 var taskMap = _mapper.Map<Models.Task>(taskCreate);
@@ -82,7 +82,7 @@ namespace BC_BACK.Services
             if (updatTask == null || !updatTask.Any())
                 return BadRequest("No tasks provided");
 
-            if (updatTask.Count() > 50 || updatTask.Count() < 10)
+            if (updatTask.Count > 50 || updatTask.Count < 10)
                 return BadRequest("Wrong number of teams provided");
 
             foreach (var updatedTask in updatTask)

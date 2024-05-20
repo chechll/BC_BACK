@@ -83,7 +83,7 @@ namespace BC_BACK.Services
 
                 return Ok();
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return StatusCode(500);
             }
@@ -98,7 +98,7 @@ namespace BC_BACK.Services
 
                 return Ok(allATs);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return StatusCode(500);
             }

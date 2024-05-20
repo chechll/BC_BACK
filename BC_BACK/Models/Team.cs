@@ -25,21 +25,6 @@ public partial class Team
     [NotMapped]
     public int Steps { get; set; }
 
-    public override bool Equals(object obj)
-    {
-        if (obj == null || GetType() != obj.GetType())
-        {
-            return false;
-        }
-
-        var otherTeam = (Team)obj;
-        return IdTeam == otherTeam.IdTeam;
-    }
-
-    public override int GetHashCode()
-    {
-        return IdTeam.GetHashCode();
-    }
     [JsonIgnore]
     public virtual ICollection<AnsweredTask> AnsweredTasks { get; set; } = new List<AnsweredTask>();
     [JsonIgnore]

@@ -10,7 +10,7 @@ namespace BC_BACK.Controllers
     [ApiController]
     public class GameController : Controller
     {
-        private IGameServices _gameServices;
+        private readonly IGameServices _gameServices;
         private readonly IJwtService _jwtService;
         public GameController(IGameServices gameServices, IJwtService jwtService)
         {
@@ -18,7 +18,7 @@ namespace BC_BACK.Controllers
             _jwtService = jwtService;
         }
 
-        private IActionResult ValidateTokenAndGetPrincipal()
+        private IActionResult? ValidateTokenAndGetPrincipal()
         {
             var token = Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
             var principal = _jwtService.GetPrincipalFromToken(token);

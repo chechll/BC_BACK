@@ -1,11 +1,7 @@
 ﻿using BC_BACK.Dto;
-using AutoMapper;
-using BC_BACK.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using BC_BACK.Services.Interfaces;
-using BC_BACK.Services;
 using Microsoft.AspNetCore.Authorization;
-using System.Security.Claims;
 
 namespace BC_BACK.Controllers
 {

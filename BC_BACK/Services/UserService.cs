@@ -56,7 +56,7 @@ namespace BC_BACK.Services
 
                 return Ok(alluser);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return StatusCode(500);
             }

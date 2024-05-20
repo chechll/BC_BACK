@@ -26,7 +26,7 @@
 
         public string AddActiveGame(Game game, List<Team> teams)
         {
-            if (!_activeGames.Any(g => g.IdGame == game.IdGame))
+            if (_activeGames != null &&  _gameTeams != null && !_activeGames.Any(g => g.IdGame == game.IdGame))
             {
                 _activeGames.Enqueue(game);
                 game.DateGame = DateTime.Now;
@@ -39,7 +39,7 @@
 
         public string RemoveActiveGame(Game game)
         {
-            if (_activeGames.Any(g => g.IdGame == game.IdGame))
+            if (_activeGames != null && _gameTeams != null &&  _activeGames.Any(g => g.IdGame == game.IdGame))
             {
                 _activeGames = new Queue<Game>(_activeGames.Where(g => g.IdGame != game.IdGame));
                 _gameTeams.Remove(game.IdGame);
@@ -48,12 +48,12 @@
             return "There is no such active game";
         }
 
-        public Game FindGameById(int gameId)
+        public Game? FindGameById(int gameId)
         {
-            return _activeGames.FirstOrDefault(game => game.IdGame == gameId);
+            return _activeGames?.FirstOrDefault(game => game.IdGame == gameId);
         }
 
-        public Queue<Game> GetAllGames()
+        public Queue<Game>? GetAllGames()
         {
             return _activeGames;
         }
@@ -80,7 +80,7 @@
 
         public async Task<string> RemoveFirstGameFromQueueAsync()
         {
-            if (_activeGames.Count > 0)
+            if (_activeGames != null && _activeGames.Count > 0)
             {
                 var firstGame = _activeGames.Peek();
                 await System.Threading.Tasks.Task.Delay(TimeSpan.FromMinutes(120));
@@ -92,10 +92,10 @@
 
         public List<Team>? GetGameTeams(int gameId)
         {
-            return _gameTeams.TryGetValue(gameId, out var teams) ? teams : null;
+            return _gameTeams != null && _gameTeams.TryGetValue(gameId, out var teams) ? teams : null;
         }
 
-        private List<Team> ResetStepsForTeams(List<Team> teams)
+        private static List<Team> ResetStepsForTeams(List<Team> teams)
         {
             foreach (var team in teams)
             {
@@ -106,12 +106,12 @@
 
         public Team? GetTeam (int idGame, int idTeam)
         {
-            return _gameTeams.TryGetValue(idGame, out var teams) ? teams.FirstOrDefault(team => team.IdTeam == idTeam) : null;
+            return _gameTeams != null && _gameTeams.TryGetValue(idGame, out var teams) ? teams.FirstOrDefault(team => team.IdTeam == idTeam) : null;
         }
 
         public string UpdateTeam(Team updatedTeam)
         {
-            if (_gameTeams.TryGetValue(updatedTeam.IdGame, out var teams))
+            if (_gameTeams != null &&_gameTeams.TryGetValue(updatedTeam.IdGame, out var teams))
             {
                 var existingTeamIndex = teams.FindIndex(team => team.IdTeam == updatedTeam.IdTeam);
                 if (existingTeamIndex != -1)
@@ -126,6 +126,8 @@
 
         public string CheckGame(int idGame)
         {
+            if (_activeGames == null)
+                return "No";
             return _activeGames.Any(g => g.IdGame == idGame) ? "Yes" : "No";
         }
     }

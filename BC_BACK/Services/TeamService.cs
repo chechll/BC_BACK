@@ -35,7 +35,7 @@ namespace BC_BACK.Services
                 var teamDtos = _mapper.Map<List<TeamDto>>(allTeams);
                 return Ok(teamDtos);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return StatusCode(500);
             }
@@ -49,7 +49,7 @@ namespace BC_BACK.Services
             if (teamCreates == null || !teamCreates.Any())
                 return BadRequest("No teams provided");
             
-            if (teamCreates.Count() > 6 || teamCreates.Count() < 2)
+            if (teamCreates.Count > 6 || teamCreates.Count < 2)
                 return BadRequest("Wrong number of teams provided");
 
             foreach (var teamCreate in teamCreates)
@@ -135,14 +135,13 @@ namespace BC_BACK.Services
             {
                 return BadRequest("No teams provided");
             }
-            if (updatTeam.Count() > 6 || updatTeam.Count() < 2)
+            if (updatTeam.Count > 6 || updatTeam.Count < 2)
             {
                 return BadRequest("Wrong number of teams provided");
             }
 
             foreach (var updatedTeam in updatTeam)
             {
-                bool isUpdateNeeded = false;
                 if (updatedTeam == null)
                     return BadRequest(ModelState);
 
@@ -154,9 +153,6 @@ namespace BC_BACK.Services
 
                 var team = _teamRepository.GetTeam(updatedTeam.IdTeam);
 
-                //updatedTeam.PositionX = (_teamRepository.GetBoardSize(updatedTeam.IdGame) + 1) / 2 - 1;
-                //updatedTeam.PositionY = (_teamRepository.GetBoardSize(updatedTeam.IdGame) + 1) / 2 - 1;
-
                 if (IsUpdateNeeded(ref team, updatedTeam))
                 {
                     if (!_teamRepository.UpdateTeam(_mapper.Map<Team>(team)))
@@ -166,7 +162,7 @@ namespace BC_BACK.Services
             return Ok("Successfully updated");
         }
 
-        private bool IsUpdateNeeded(ref Team team, TeamDto updatedTeam)
+        private static bool IsUpdateNeeded(ref Team team, TeamDto updatedTeam)
         {
             if (updatedTeam.Name != team.Name)
             {
@@ -205,7 +201,7 @@ namespace BC_BACK.Services
             return false;
         }
 
-        private IActionResult ValidateTeam(TeamDto teamCreate)
+        private IActionResult? ValidateTeam(TeamDto teamCreate)
         {
             if (teamCreate == null)
                 return BadRequest("Invalid team data");

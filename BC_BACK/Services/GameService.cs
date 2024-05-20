@@ -43,11 +43,9 @@ namespace BC_BACK.Services
         // crud functions
         public IActionResult GetGameData(int id)
         {
-            Console.WriteLine(id);
-            if (!_gameRepository.isGameExist(id))
+            if (!_gameRepository.IsGameExist(id))
                 return BadRequest("No such game");
 
-            Console.WriteLine("id");
             try
             {
                 var nftm = 2;
@@ -64,12 +62,12 @@ namespace BC_BACK.Services
 
                 if (tasks.Any())
                 {
-                    nftk = tasks.Count();
+                    nftk = tasks.Count;
                 }
 
                 if (teams.Any())
                 {
-                    nftm = teams.Count();
+                    nftm = teams.Count;
                 }
 
                 var size = boards.First().Size;
@@ -80,7 +78,6 @@ namespace BC_BACK.Services
                     Size = size,
                     NumberOfTasks = nftk,
                     NumberOfTeams = nftm,
-                    EnQuestions = false,
                     IdGame = id,
                 });
 
@@ -94,81 +91,91 @@ namespace BC_BACK.Services
 
         public IActionResult CheckGameData(int id)
         {
-            Console.WriteLine(id);
-            bool gameExists = _gameRepository.isGameExist(id);
+            bool gameExists = _gameRepository.IsGameExist(id);
             bool boardExists = _boardRepository.GetBoardsByGame(id).FirstOrDefault() != null;
             bool tasksExist = _taskRepository.GetTasksByGame(id).Any();
             bool teamsExist = _teamRepository.GetTeamsByGame(id).Any();
 
             if (gameExists && boardExists && tasksExist && teamsExist)
             {
-                Console.WriteLine("true");
                 return Ok();
             }
             else
             {
-                Console.WriteLine($"false {gameExists} | {boardExists} | {tasksExist} | {teamsExist}");
                 return BadRequest();
             }
         }
 
         public IActionResult GetAllGames(int idUser)
         {
-            try
-            {
-                var allGame = _mapper.Map<List<GameDto>>(_gameRepository.GetGamesByUser(idUser));
+            var allGame = _mapper.Map<List<GameDto>>(_gameRepository.GetGamesByUser(idUser));
 
-                return Ok(allGame);
-            }
-            catch (Exception ex)
-            {
-                return BadRequest();
-            }
+            return Ok(allGame);
         }
 
         public IActionResult UpdateGameByGameData(DataForUpdate dataForUpdate)
         {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var game = _gameRepository.GetGame(dataForUpdate.IdGame);
+            if (game == null)
+                return BadRequest("Invalid game ID.");
+
+            if (!_gameRepository.IsGameExist(game.IdGame))
+                return NotFound();
+
+            if (!_userRepository.isUserExist(game.IdUser) || !_checkDataRepository.CheckStringLengs(dataForUpdate.Name, 20))
+                return StatusCode(422, "Invalid data");
+
             var updatedGame = new GameDto
             {
                 IdGame = dataForUpdate.IdGame,
                 Name = dataForUpdate.Name,
                 IdUser = _gameRepository.GetGame(dataForUpdate.IdGame).IdUser
             };
+            if (!UpdateGame(game, updatedGame))
+                return StatusCode(500, "Failed to update game");
 
-            if (updatedGame == null)
-                return BadRequest(ModelState);
+            if (!UpdateBoard(dataForUpdate))
+                return StatusCode(500, "Failed to update board");
 
-            if (!_gameRepository.isGameExist(updatedGame.IdGame))
-                return NotFound();
+            if (!UpdateTeams(dataForUpdate, game.IdGame))
+                return StatusCode(500, "Failed to update teams");
 
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
+            if (!UpdateTasks(dataForUpdate, game.IdGame))
+                return StatusCode(500, "Failed to update tasks");
 
-            if (!_userRepository.isUserExist(updatedGame.IdUser) || !_checkDataRepository.CheckStringLengs(updatedGame.Name, 20))
-                return StatusCode(422, "Invalid data");
+            return Ok("Successfully updated");
+        }
 
-            var game = _gameRepository.GetGame(updatedGame.IdGame);
-
+        private bool UpdateGame(Game game, GameDto dataForUpdate)
+        {
             bool isUpdateNeeded = false;
 
-            if (updatedGame.Name != game.Name)
+            if (dataForUpdate.Name != game.Name)
             {
-                game.Name = updatedGame.Name;
+                game.Name = dataForUpdate.Name;
                 isUpdateNeeded = true;
             }
 
-            if (updatedGame.DateGame != game.DateGame)
+            if (dataForUpdate.DateGame != game.DateGame)
             {
-                game.DateGame = updatedGame.DateGame;
+                game.DateGame = dataForUpdate.DateGame;
                 isUpdateNeeded = true;
             }
 
             if (isUpdateNeeded)
             {
                 if (!_gameRepository.UpdateGame(_mapper.Map<Game>(game)))
-                    return StatusCode(500, "Failed to update game");
+                    return false;
             }
 
+            return true;
+        }
+
+        private bool UpdateBoard(DataForUpdate dataForUpdate)
+        {
             var board = _boardRepository.GetBoardsByGame(dataForUpdate.IdGame).FirstOrDefault();
             if (board != null && dataForUpdate.Size % 2 != 0 && dataForUpdate.Size >= 9 && dataForUpdate.Size <= 25 && dataForUpdate.Size != board.Size)
             {
@@ -176,77 +183,92 @@ namespace BC_BACK.Services
                 board.Board1 = _boardRepository.BoardToString(_boardRepository.CreateBorad(board.Size));
 
                 if (!_boardRepository.UpdateBoard(board))
-                    return StatusCode(500, "Failed to update board");
+                    return false;
             }
 
-            //check teams
-            var currentNumberOfTeams = _teamRepository.GetTeamsByGame(dataForUpdate.IdGame).Count();
+            return true;
+        }
+
+        private bool UpdateTeams(DataForUpdate dataForUpdate, int gameId)
+        {
+            var currentNumberOfTeams = _teamRepository.GetTeamsByGame(gameId).Count;
+
             if (dataForUpdate.NumberOfTeams < currentNumberOfTeams)
             {
-                List<Team> teamsToRemove = _teamRepository.GetTeamsByGame(dataForUpdate.IdGame)
-                                           .OrderByDescending(team => team.IdTeam)
-                                           .Take(currentNumberOfTeams - dataForUpdate.NumberOfTeams)
-                                           .ToList();
+                var teamsToRemove = _teamRepository.GetTeamsByGame(gameId)
+                                     .OrderByDescending(team => team.IdTeam)
+                                     .Take(currentNumberOfTeams - dataForUpdate.NumberOfTeams)
+                                     .ToList();
 
                 _teamRepository.DeleteTeams(teamsToRemove);
-            } 
+            }
             else if (dataForUpdate.NumberOfTeams > currentNumberOfTeams)
             {
-                int numberOfNewTeams = dataForUpdate.NumberOfTeams - currentNumberOfTeams;
-
+                var numberOfNewTeams = dataForUpdate.NumberOfTeams - currentNumberOfTeams;
                 for (int i = 0; i < numberOfNewTeams; i++)
                 {
-                    _teamRepository.CreateTeam(new Team
+                    var newTeam = new Team
                     {
                         Colour = "#000000",
                         Name = $"name{i}",
                         Password = BCrypt.Net.BCrypt.EnhancedHashPassword(i.ToString(), 13),
-                        IdGame = updatedGame.IdGame,
-                        PositionX = (board.Size + 1) / 2 - 1,
-                        PositionY = (board.Size + 1) / 2 - 1,
+                        IdGame = gameId,
+                        PositionX = (dataForUpdate.Size + 1) / 2 - 1,
+                        PositionY = (dataForUpdate.Size + 1) / 2 - 1,
                         Score = 0
-                    });
+                    };
+                    if (!_teamRepository.CreateTeam(newTeam))
+                        return false;
                 }
             }
 
-            var teams = _teamRepository.GetTeamsByGame(updatedGame.IdGame);
+            var teams = _teamRepository.GetTeamsByGame(gameId);
             foreach (var team in teams)
             {
-                if (team.PositionX != (board.Size + 1) / 2 - 1)
+                var newPositionX = (dataForUpdate.Size + 1) / 2 - 1;
+                var newPositionY = (dataForUpdate.Size + 1) / 2 - 1;
+                if (team.PositionX != newPositionX || team.PositionY != newPositionY)
                 {
-                    team.PositionX = (board.Size + 1) / 2 - 1;
-                    team.PositionY = (board.Size + 1) / 2 - 1;
-                    _teamRepository.UpdateTeam(team);
+                    team.PositionX = newPositionX;
+                    team.PositionY = newPositionY;
+                    if (!_teamRepository.UpdateTeam(team))
+                        return false;
                 }
             }
 
-            //check tasks
-            var currentNumberOfTasks = _taskRepository.GetTasksByGame(dataForUpdate.IdGame).Count();
+            return true;
+        }
+
+        private bool UpdateTasks(DataForUpdate dataForUpdate, int gameId)
+        {
+            var currentNumberOfTasks = _taskRepository.GetTasksByGame(gameId).Count;
+
             if (dataForUpdate.NumberOfTasks < currentNumberOfTasks)
             {
-                List<Models.Task> tasksToRemove = _taskRepository.GetTasksByGame(dataForUpdate.IdGame)
-                                           .OrderByDescending(team => team.IdTask)
-                                           .Take(currentNumberOfTasks - dataForUpdate.NumberOfTasks)
-                                           .ToList();
+                var tasksToRemove = _taskRepository.GetTasksByGame(gameId)
+                                     .OrderByDescending(task => task.IdTask)
+                                     .Take(currentNumberOfTasks - dataForUpdate.NumberOfTasks)
+                                     .ToList();
 
                 _taskRepository.DeleteTasks(tasksToRemove);
             }
             else if (dataForUpdate.NumberOfTasks > currentNumberOfTasks)
             {
-                int numberOfNewTasks = dataForUpdate.NumberOfTasks - currentNumberOfTasks;
-
+                var numberOfNewTasks = dataForUpdate.NumberOfTasks - currentNumberOfTasks;
                 for (int i = 0; i < numberOfNewTasks; i++)
                 {
-                    _taskRepository.CreateTask(new Models.Task
+                    var newTask = new Models.Task
                     {
                         Number = i,
                         Answer = $"new ans{i}",
-                        IdGame = updatedGame.IdGame
-                    });
+                        IdGame = gameId
+                    };
+                    if (!_taskRepository.CreateTask(newTask))
+                        return false;
                 }
             }
 
-            return Ok("Successfully updated");
+            return true;
         }
 
         public IActionResult CreateGame(CreateData createData)
@@ -257,11 +279,8 @@ namespace BC_BACK.Services
                 Name = createData.Name
             };
 
-            if (gameCreate == null)
+            if (gameCreate == null || !ModelState.IsValid)
                 return BadRequest();
-
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
 
             if (!_userRepository.isUserExist(gameCreate.IdUser))
                 return NotFound();
@@ -292,13 +311,36 @@ namespace BC_BACK.Services
 
         public IActionResult CloneGame(int idGame)
         {
-            if (idGame == 0 || !_gameRepository.isGameExist(idGame))
+            if (idGame == 0 || !_gameRepository.IsGameExist(idGame))
                 return BadRequest("Invalid game ID.");
 
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
+            var newGameId = CloneGameCore(idGame);
+            if (newGameId == null)
+                return StatusCode(500, "Failed to clone game");
+
+            var boardResult = CloneBoard(idGame, newGameId.Value);
+            if (!boardResult)
+                return StatusCode(500, "Failed to create board");
+
+            var teamResult = CloneTeams(idGame, newGameId.Value);
+            if (!teamResult)
+                return StatusCode(500, "Failed to create team");
+
+            var taskResult = CloneTasks(idGame, newGameId.Value);
+            if (!taskResult)
+                return StatusCode(500, "Failed to create task");
+
+            return Ok();
+        }
+
+        private int? CloneGameCore(int idGame)
+        {
             var game1 = _gameRepository.GetGame(idGame);
+            if (game1 == null)
+                return null;
             var game = new Game
             {
                 Name = game1.Name,
@@ -306,10 +348,13 @@ namespace BC_BACK.Services
             };
 
             if (!_gameRepository.CreateGame(game))
-                return StatusCode(500, "Failed to clone game");
+                return null;
 
-            int id = _gameRepository.GetGames().Max(g => g.IdGame);
+            return _gameRepository.GetGames().Max(g => g.IdGame);
+        }
 
+        private bool CloneBoard(int idGame, int newGameId)
+        {
             var board = _boardRepository.GetBoardsByGame(idGame).FirstOrDefault();
 
             if (board != null)
@@ -318,30 +363,43 @@ namespace BC_BACK.Services
                 {
                     Size = board.Size,
                     Board1 = _boardRepository.BoardToString(_boardRepository.CreateBorad(board.Size)),
-                    IdGame = id,
+                    IdGame = newGameId,
                 };
-                if (!_boardRepository.CreateBoard(newBoard))
-                    return StatusCode(500, "Failed to create board");
+
+                return _boardRepository.CreateBoard(newBoard);
             }
 
+            return true; // No board to clone, so consider it a success.
+        }
+
+        private bool CloneTeams(int idGame, int newGameId)
+        {
             var teams = _teamRepository.GetTeamsByGame(idGame).ToList();
+
             foreach (var tea in teams)
             {
                 var team = new Team
                 {
                     Name = tea.Name,
                     Password = tea.Password,
-                    IdGame = id,
+                    IdGame = newGameId,
                     Colour = tea.Colour,
-                    PositionX = (board.Size + 1) / 2 - 1,
-                    PositionY = (board.Size + 1) / 2 - 1,
+                    PositionX = (tea.PositionX + 1) / 2 - 1,
+                    PositionY = (tea.PositionY + 1) / 2 - 1,
                     Score = 0,
                 };
+
                 if (!_teamRepository.CreateTeam(team))
-                    return StatusCode(500, "Failed to create team");
+                    return false;
             }
 
+            return true;
+        }
+
+        private bool CloneTasks(int idGame, int newGameId)
+        {
             var tasks = _taskRepository.GetTasksByGame(idGame).ToList();
+
             foreach (var tas in tasks)
             {
                 var task = new Models.Task
@@ -349,20 +407,21 @@ namespace BC_BACK.Services
                     Number = tas.Number,
                     Question = tas.Question,
                     Answer = tas.Answer,
-                    IdGame = id,
+                    IdGame = newGameId,
                 };
+
                 if (!_taskRepository.CreateTask(task))
-                    return StatusCode(500, "Failed to create task");
+                    return false;
             }
 
-            return Ok();
+            return true;
         }
 
         public IActionResult DeleteGame(int idGame)
         {
             var gameToDelete = _gameRepository.GetGame(idGame);
 
-            if (gameToDelete == null || !_gameRepository.isGameExist(idGame))
+            if (gameToDelete == null || !_gameRepository.IsGameExist(idGame))
                 return NotFound();
 
             var boardsToDelete = _boardRepository.GetBoardsByGame(idGame)?.ToList();
@@ -405,33 +464,41 @@ namespace BC_BACK.Services
 
         public IActionResult StartGame(int idGame)
         {
-            if (_gameRepository.isGameExist(idGame))
+            if (_gameRepository.IsGameExist(idGame))
             {
                 var game = _gameRepository.GetGame(idGame);
-                var teams = _teamRepository.GetTeamsByGame(game.IdGame);
-                var response = _gameManager.AddActiveGame(game, (List<Team>)teams);
-                if (response == "Added successfully!")
+                if (game != null)
                 {
-                    var sql = "UPDATE Game SET date_game = @DateGame WHERE id_game = @IdGame";
-                    _dbContext.Database.ExecuteSqlRaw(sql,
-                        new SqlParameter("@DateGame", game.DateGame),
-                        new SqlParameter("@IdGame", game.IdGame));
-                    return Ok();
+                    var teams = _teamRepository.GetTeamsByGame(game.IdGame);
+                    var response = _gameManager.AddActiveGame(game, (List<Team>)teams);
+                    if (response == "Added successfully!")
+                    {
+                        var sql = "UPDATE Game SET date_game = @DateGame WHERE id_game = @IdGame";
+                        _dbContext.Database.ExecuteSqlRaw(sql,
+                            new SqlParameter("@DateGame", game.DateGame),
+                            new SqlParameter("@IdGame", game.IdGame));
+                        return Ok();
+                    }
+
+                    return BadRequest(response);
                 }
-                return BadRequest(response);
             }
             return BadRequest("there is no such game");
         }
 
         public IActionResult EndGame(int idGame)
         {
-            if (_gameRepository.isGameExist(idGame))
+            if (_gameRepository.IsGameExist(idGame))
             {
                 var game = _gameRepository.GetGame(idGame);
-                var response = _gameManager.RemoveActiveGame(game);
-                if (response == "Removed successfully!")
-                    return Ok(response);
-                return BadRequest(response);
+                if (game != null)
+                {
+                    var response = _gameManager.RemoveActiveGame(game);
+                    if (response == "Removed successfully!")
+                        return Ok(response);
+
+                    return BadRequest(response);
+                }
             }
             return BadRequest("there is no such game");
         }
@@ -460,10 +527,10 @@ namespace BC_BACK.Services
 
         public IActionResult DateGame(int idGame)
         {
-            if (_gameRepository.isGameExist(idGame))
+            if (_gameRepository.IsGameExist(idGame))
             {
                 var game = _gameRepository.GetGame(idGame);
-                if (game.DateGame != null)
+                if (game != null && game.DateGame != null)
                     return Ok(game.DateGame);
                 return BadRequest("game didn't start");
             }

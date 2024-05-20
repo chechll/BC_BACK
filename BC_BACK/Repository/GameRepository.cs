@@ -33,7 +33,7 @@ namespace BC_BACK.Repository
             return Save();
         }
 
-        public Game GetGame(int id)
+        public Game? GetGame(int id)
         {
             return _context.Games.Where(p => p.IdGame == id).FirstOrDefault();
         }
@@ -48,12 +48,15 @@ namespace BC_BACK.Repository
             return _context.Games.Where(p => p.IdUser == userID).ToList();
         }
 
-        public int GetIdByName(String name)
+        public int? GetIdByName(String name)
         {
-            return _context.Games.Where(p => p.Name == name).FirstOrDefault().IdGame;
+            var game = _context.Games.Where(p => p.Name == name).FirstOrDefault();
+            if (game == null)
+                return null;
+            return game.IdGame;
         }
 
-        public bool isGameExist(int id)
+        public bool IsGameExist(int id)
         {
             return _context.Games.Any(p => p.IdGame == id);
         }
@@ -61,7 +64,7 @@ namespace BC_BACK.Repository
         public bool Save()
         {
             var saved = _context.SaveChanges();
-            return saved > 0 ? true : false;
+            return saved > 0;
         }
 
         public bool UpdateGame(Game game)

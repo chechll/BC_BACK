@@ -13,7 +13,7 @@ using System.Text;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-GameManager gameManager = new GameManager();
+GameManager gameManager = new ();
 
 builder.Services.AddControllers();
 builder.Services.AddControllers().AddJsonOptions(x =>
