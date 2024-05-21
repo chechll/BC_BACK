@@ -38,7 +38,7 @@ namespace BC_BACK.Repository
             return Save();
         }
 
-        public Models.Task GetTask(int id)
+        public Models.Task? GetTask(int id)
         {
             return _context.Tasks.Where(p => p.IdTask == id).FirstOrDefault();
         }
@@ -53,7 +53,7 @@ namespace BC_BACK.Repository
             return _context.Tasks.Where(p => p.IdGame == gameId).ToList();
         }
 
-        public bool isTaskExist(int id)
+        public bool IsTaskExist(int id)
         {
             return _context.Tasks.Any(p => p.IdTask == id);
         }
@@ -61,7 +61,7 @@ namespace BC_BACK.Repository
         public bool Save()
         {
             var saved = _context.SaveChanges();
-            return saved > 0 ? true : false;
+            return saved > 0;
         }
 
         public bool UpdateTask(Models.Task task)

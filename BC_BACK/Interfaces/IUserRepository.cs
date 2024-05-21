@@ -2,9 +2,9 @@
 {
     public interface IUserRepository
     {
-        User GetUser(int id);
+        User? GetUser(int id);
         ICollection<User> GetUsers();
-        bool isUserExist(int id);
+        bool IsUserExist(int id);
         int GetId(string name);
         bool IsAdmin(int id);
         bool Save();

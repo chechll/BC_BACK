@@ -36,7 +36,7 @@ namespace BC_BACK.Repository
             return userId;
         }
 
-        public User GetUser(int id)
+        public User? GetUser(int id)
         {
             return _context.Users.Where(p => p.IdUser == id).FirstOrDefault();
         }
@@ -52,7 +52,7 @@ namespace BC_BACK.Repository
             return false;
         }
 
-        public bool isUserExist(int id)
+        public bool IsUserExist(int id)
         {
             return _context.Users.Any(p => p.IdUser == id);
         }
@@ -60,7 +60,7 @@ namespace BC_BACK.Repository
         public bool Save()
         {
             var saved = _context.SaveChanges();
-            return saved > 0 ? true : false;
+            return saved > 0;
         }
 
         public bool UpdateUser(User user)

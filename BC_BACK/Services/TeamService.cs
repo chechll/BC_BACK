@@ -75,7 +75,7 @@ namespace BC_BACK.Services
         {
             try
             {
-                if (!_teamRepository.isTeamExist(id))
+                if (!_teamRepository.IsTeamExist(id))
                     return NotFound();
 
                 var team = _teamRepository.GetTeam(id);
@@ -86,7 +86,7 @@ namespace BC_BACK.Services
                     return BadRequest(ModelState);
                 }
 
-                if (BCrypt.Net.BCrypt.EnhancedVerify(password, team.Password))
+                if(team != null && BCrypt.Net.BCrypt.EnhancedVerify(password, team.Password))
                 {
                     var token = _jwtService.GenerateToken(team.IdTeam.ToString());
                     return Ok(new { id, token });
@@ -112,7 +112,7 @@ namespace BC_BACK.Services
             if (updatedTeam == null)
                 return BadRequest("No teams provided");
 
-            if (!_teamRepository.isTeamExist(updatedTeam.IdTeam))
+            if (!_teamRepository.IsTeamExist(updatedTeam.IdTeam))
                 return NotFound();
 
             if (!_checkDataRepository.CheckStringLengs(updatedTeam.Name, 20))
@@ -120,7 +120,7 @@ namespace BC_BACK.Services
 
             var team = _teamRepository.GetTeam(updatedTeam.IdTeam);
 
-            if (IsUpdateNeeded(ref team, updatedTeam))
+            if (team != null && IsUpdateNeeded(ref team, updatedTeam))
             {
                 if (!_teamRepository.UpdateTeam(_mapper.Map<Team>(team)))
                     return StatusCode(500, "Failed to update team");
@@ -145,7 +145,7 @@ namespace BC_BACK.Services
                 if (updatedTeam == null)
                     return BadRequest(ModelState);
 
-                if (!_teamRepository.isTeamExist(updatedTeam.IdTeam))
+                if (!_teamRepository.IsTeamExist(updatedTeam.IdTeam))
                     return NotFound();
 
                 if (!_checkDataRepository.CheckStringLengs(updatedTeam.Name, 20))
@@ -153,7 +153,7 @@ namespace BC_BACK.Services
 
                 var team = _teamRepository.GetTeam(updatedTeam.IdTeam);
 
-                if (IsUpdateNeeded(ref team, updatedTeam))
+                if (team != null && IsUpdateNeeded(ref team, updatedTeam))
                 {
                     if (!_teamRepository.UpdateTeam(_mapper.Map<Team>(team)))
                         return StatusCode(500, "Failed to update team");
@@ -206,7 +206,7 @@ namespace BC_BACK.Services
             if (teamCreate == null)
                 return BadRequest("Invalid team data");
 
-            if (!_gameRepository.isGameExist(teamCreate.IdGame))
+            if (!_gameRepository.IsGameExist(teamCreate.IdGame))
                 return BadRequest("Invalid game ID");
 
             var size = _teamRepository.GetBoardSize(teamCreate.IdGame);

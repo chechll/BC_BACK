@@ -2,12 +2,12 @@
 {
     public interface ITeamRepository
     {
-        Team GetTeam(int id);
-        int GetBoardSize(int idGame);
-        int GetId(string name);
+        Team? GetTeam(int id);
+        int? GetBoardSize(int idGame);
+        int? GetId(string name);
         ICollection<Team> GetTeams();
         ICollection<Team> GetTeamsByGame(int gameId);
-        bool isTeamExist(int id);
+        bool IsTeamExist(int id);
         bool Save();
         bool CreateTeam(Team team);
         bool DeleteTeam(Team team);

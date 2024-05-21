@@ -8,7 +8,7 @@ namespace BC_BACK.Interfaces
         bool CreateAT(AnsweredTask at);
         bool DeleteAT(AnsweredTask at);
         bool DeleteATs(List<AnsweredTask> ats);
-        AnsweredTask GetAT(int id);
+        AnsweredTask? GetAT(int id);
         ICollection<AnsweredTask> GetATs();
         ICollection<AnsweredTask> GetATsByTask(int taskId);
         ICollection<AnsweredTask> GetATsByTeam(int teamId);

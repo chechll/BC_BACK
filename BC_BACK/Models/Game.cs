@@ -18,10 +18,10 @@ namespace BC_BACK.Models
         public Queue<Team> TeamQueue { get; set; }
 
         [NotMapped]
-        private Team currentTeam { get; set; }
+        private Team? CurrentTeam { get; set; }
 
         [NotMapped]
-        private Timer timer;
+        private Timer? timer;
 
         public Game()
         {
@@ -33,7 +33,7 @@ namespace BC_BACK.Models
             lock (TeamQueue)
             {
 
-                if (TeamQueue.Contains(team) || (currentTeam != null && currentTeam.IdTeam == team.IdTeam))
+                if (TeamQueue.Contains(team) || (CurrentTeam != null && CurrentTeam.IdTeam == team.IdTeam))
                 {
                     return $"Team is already in the queue";
                 }
@@ -41,7 +41,7 @@ namespace BC_BACK.Models
                 TeamQueue.Enqueue(team);
                 Console.WriteLine($"Team {team.Name} added to the queue");
 
-                if (currentTeam == null)
+                if (CurrentTeam == null)
                 {
                     StartNextTeamTimer();
                     return $"Team started";
@@ -50,10 +50,10 @@ namespace BC_BACK.Models
             }
         }
 
-        public int getCurrentTeamId()
+        public int GetCurrentTeamId()
         {
-            if (currentTeam != null)
-            return currentTeam.IdTeam;
+            if (CurrentTeam != null)
+            return CurrentTeam.IdTeam;
             return 0;
         }
 
@@ -61,8 +61,7 @@ namespace BC_BACK.Models
         {
             if (TeamQueue.Count > 0)
             {
-                currentTeam = TeamQueue.Dequeue();
-                Console.WriteLine($"Timer started for team: {currentTeam.Name}");
+                CurrentTeam = TeamQueue.Dequeue();
                 timer = new Timer(ReleaseCurrentTeam, null, TimeSpan.FromMinutes(2.9), TimeSpan.FromMilliseconds(-1));
             }
         }
@@ -71,8 +70,7 @@ namespace BC_BACK.Models
         {
             lock (TeamQueue)
             {
-                Console.WriteLine($"Timer stopped for team: {currentTeam.Name}");
-                currentTeam = null;
+                CurrentTeam = null;
                 if (TeamQueue.Count > 0)
                 {
                     StartNextTeamTimer();
@@ -85,14 +83,12 @@ namespace BC_BACK.Models
             lock (TeamQueue)
             {
                 string response = "there is no such team";
-                Console.WriteLine("Curteam" + currentTeam.IdTeam + "team" + team.IdTeam);
-                if (currentTeam != null && currentTeam.IdTeam == team.IdTeam)
+                if (CurrentTeam != null && CurrentTeam.IdTeam == team.IdTeam)
                 {
-                    currentTeam = null;
+                    CurrentTeam = null;
                     timer?.Dispose();
-                    Console.WriteLine($"Timer stopped for team: {team.Name}");
                     response = $"Timer stopped for team: {team.Name}\n Team {team.Name} removed";
-                    if (currentTeam == null && TeamQueue.Count > 0)
+                    if (CurrentTeam == null && TeamQueue.Count > 0)
                     {
                         StartNextTeamTimer();
                     }
@@ -102,7 +98,6 @@ namespace BC_BACK.Models
                     if (TeamQueue.Contains(team))
                     {
                         var removedTeam = TeamQueue.Dequeue();
-                        Console.WriteLine($"Team {removedTeam.Name} removed from the queue.");
                         response = $"Team {removedTeam.Name} removed from the queue successfully.";
                     }
                 }

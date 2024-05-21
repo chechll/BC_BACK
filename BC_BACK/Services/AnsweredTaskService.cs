@@ -24,8 +24,8 @@ namespace BC_BACK.Services
 
         public IActionResult CheckAns(int idTeam, int idTask, string answer)
         {
-            var taskExists = _taskRepository.isTaskExist(idTask);
-            var teamExists = _teamRepository.isTeamExist(idTeam);
+            var taskExists = _taskRepository.IsTaskExist(idTask);
+            var teamExists = _teamRepository.IsTeamExist(idTeam);
 
             if (!taskExists || !teamExists)
                 return BadRequest("invalid data");
@@ -33,11 +33,10 @@ namespace BC_BACK.Services
             var team = _teamRepository.GetTeam(idTeam);
             var task = _taskRepository.GetTask(idTask);
 
-            if (team.IdGame != task.IdGame)
+            if (team != null && task != null && team.IdGame != task.IdGame)
                 return BadRequest("Invalid team, task, or answer.");
 
-            Console.WriteLine(task.Answer + " " + answer);
-            if (task.Answer != answer)
+            if (task != null && task.Answer != answer)
                 return StatusCode(422, "Wrong answer");
 
             if (_ansRepository.GetATs().Any(at => at.IdTask == idTask && at.IdTeam == idTeam))
@@ -64,14 +63,14 @@ namespace BC_BACK.Services
             {
                 foreach (var answeredTask in ansTasks)
                 {
-                    if (_taskRepository.isTaskExist(answeredTask.IdTask) &&
-                    _teamRepository.isTeamExist(answeredTask.IdTeam) &&
+                    if (_taskRepository.IsTaskExist(answeredTask.IdTask) &&
+                    _teamRepository.IsTeamExist(answeredTask.IdTeam) &&
                     !_ansRepository.IsAT_Exist(answeredTask.Id))
                     {
                         var team = _teamRepository.GetTeam(answeredTask.IdTeam);
                         var task = _taskRepository.GetTask(answeredTask.IdTask);
 
-                        if (team.IdGame == task.IdGame && _ansRepository.GetATs().FirstOrDefault(at => at.IdTask == answeredTask.IdTask && at.IdTeam == answeredTask.IdTeam) == null)
+                        if (task != null && team != null && team.IdGame == task.IdGame && _ansRepository.GetATs().FirstOrDefault(at => at.IdTask == answeredTask.IdTask && at.IdTeam == answeredTask.IdTeam) == null)
                         {
 
                             if (!_ansRepository.CreateAT(_mapper.Map<AnsweredTask>(answeredTask)))

@@ -33,7 +33,7 @@ namespace BC_BACK.Repository
             return Save();
         }
 
-        public AnsweredTask GetAT(int id)
+        public AnsweredTask? GetAT(int id)
         {
             return _context.AnsweredTasks.Where(p => p.Id == id).FirstOrDefault();
         }
@@ -61,7 +61,7 @@ namespace BC_BACK.Repository
         public bool Save()
         {
             var saved = _context.SaveChanges();
-            return saved > 0 ? true : false;
+            return saved > 0;
         }
 
         public bool UpdateAT(AnsweredTask at)

@@ -55,16 +55,8 @@ namespace BC_BACK.Services
                 IssuerSigningKey = new SymmetricSecurityKey(key),
                 ClockSkew = TimeSpan.Zero
             };
-
-            try
-            {
-                var principal = tokenHandler.ValidateToken(token, tokenValidationParameters, out SecurityToken validatedToken);
-                return principal;
-            }
-            catch (Exception)
-            {
-                return null;
-            }
+            var principal = tokenHandler.ValidateToken(token, tokenValidationParameters, out _);
+            return principal;
         }
     }
 }

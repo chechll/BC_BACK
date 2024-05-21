@@ -16,7 +16,7 @@
             var game = FindGameById(idGame);
             if (game != null)
             {
-                if (game.getCurrentTeamId() == idTeam) {
+                if (game.GetCurrentTeamId() == idTeam) {
                     return "Ok";
                 }
                 return "Still not current";

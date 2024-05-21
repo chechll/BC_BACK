@@ -38,7 +38,7 @@ namespace BC_BACK.Services
 
         public IActionResult GetUser(int id)
         {
-            if (!_userRepository.isUserExist(id))
+            if (!_userRepository.IsUserExist(id))
                 return NotFound();
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
@@ -84,6 +84,7 @@ namespace BC_BACK.Services
             var userId = _userRepository.GetId(userCreate.Username);
 
             var user = _userRepository.GetUser(userId);
+            if (user == null) return BadRequest();
 
             return Ok(new OperatingData
             {
@@ -95,7 +96,7 @@ namespace BC_BACK.Services
 
         public IActionResult DeleteUser(int userId)
         {
-            if (!_userRepository.isUserExist(userId))
+            if (!_userRepository.IsUserExist(userId))
                 return NotFound();
 
             if (!ModelState.IsValid)
@@ -129,8 +130,9 @@ namespace BC_BACK.Services
                     if (!_gameRepository.DeleteGame(game))
                         return StatusCode(500, "Failed to delete game");
             }
-            
 
+            if (userToDelete == null)
+                return BadRequest();
             if (!_userRepository.DeleteUser(userToDelete))
                 return StatusCode(500, "Failed to delete user");
 
@@ -141,7 +143,7 @@ namespace BC_BACK.Services
         {
             int id = _userRepository.GetId(username);
 
-            if (!_userRepository.isUserExist(id))
+            if (!_userRepository.IsUserExist(id))
                 return NotFound();
 
             if (!ModelState.IsValid)
@@ -175,16 +177,18 @@ namespace BC_BACK.Services
             if (!ModelState.IsValid || updatedUser == null)
                 return BadRequest(ModelState);
 
-            if (!_userRepository.isUserExist(updatedUser.IdUser))
+            if (!_userRepository.IsUserExist(updatedUser.IdUser))
                 return NotFound();
 
-            if (updatedUser.IdUser != _userRepository.GetId(updatedUser.Username) && _userRepository.isUserExist(_userRepository.GetId(updatedUser.Username)))
+            if (updatedUser.IdUser != _userRepository.GetId(updatedUser.Username) && _userRepository.IsUserExist(_userRepository.GetId(updatedUser.Username)))
                 return StatusCode(422, "there is a user with such username");
 
             if (updatedUser.Rights < 0 || updatedUser.Rights > 2)
                 return StatusCode(422, "Invalid rights value");
 
             var user = _userRepository.GetUser(updatedUser.IdUser);
+            if (user == null)
+                return BadRequest(ModelState);
 
             bool isUpdateNeeded = false;
 
@@ -216,7 +220,7 @@ namespace BC_BACK.Services
             if (updatedUser == null)
                 return BadRequest("Updated user is null");
 
-            if (!_userRepository.isUserExist(updatedUser.IdUser))
+            if (!_userRepository.IsUserExist(updatedUser.IdUser))
                 return NotFound();
 
             if (updatedUser.Rights < 0 || updatedUser.Rights > 2)
@@ -224,7 +228,7 @@ namespace BC_BACK.Services
 
             var user = _userRepository.GetUser(updatedUser.IdUser);
 
-            if (updatedUser.Rights != user.Rights)
+            if (user != null && updatedUser.Rights != user.Rights)
             {
                 user.Rights = updatedUser.Rights;
 

@@ -2,7 +2,7 @@
 {
     public class DataForUpdate
     {
-        public string Name { get; set; }
+        public string Name { get; set; } = null!;
         public int Size { get; set; }
         public int NumberOfTeams { get; set; }
         public int NumberOfTasks { get; set; }

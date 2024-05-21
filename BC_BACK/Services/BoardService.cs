@@ -19,10 +19,8 @@ namespace BC_BACK.Services
 
         public IActionResult GetBoard(int id)
         {
-            Console.WriteLine(id);
             var board = _boardRepository.GetBoardsByGame(id).FirstOrDefault();
-            Console.WriteLine(board);
-            if (!_boardRepository.isBoardExist(board.IdBoard))
+            if (board != null && !_boardRepository.IsBoardExist(board.IdBoard))
                 return NotFound();
 
             return Ok(board);
@@ -33,7 +31,7 @@ namespace BC_BACK.Services
             if (updatedBoard == null)
                 return BadRequest("Invalid board data");
 
-            if (!_boardRepository.isBoardExist(updatedBoard.IdBoard))
+            if (!_boardRepository.IsBoardExist(updatedBoard.IdBoard))
                 return NotFound();
 
             if (!ModelState.IsValid)
@@ -41,7 +39,7 @@ namespace BC_BACK.Services
 
             var board = _boardRepository.GetBoard(updatedBoard.IdBoard);
 
-            if (board.Board1 != updatedBoard.Board1 && board.Board1.Length == updatedBoard.Board1.Length)
+            if (board != null && board.Board1 != updatedBoard.Board1 && board.Board1.Length == updatedBoard.Board1.Length)
             {
                 board.Board1 = updatedBoard.Board1;
                 var boardMap = _mapper.Map<Board>(board);

@@ -12,7 +12,13 @@ namespace BC_BACK.Repository
             _context = context;
         }
 
-        public int GetBoardSize(int idGame) => _context.Boards.Where(p => p.IdGame == idGame).FirstOrDefault().Size;
+        public int? GetBoardSize(int idGame)
+        {
+            var board = _context.Boards.Where(p => p.IdGame == idGame).FirstOrDefault();
+            if (board == null)
+                return null;
+            return board.Size;
+        }
 
         public bool CreateTeam(Team team)
         {
@@ -35,7 +41,7 @@ namespace BC_BACK.Repository
             return Save();
         }
 
-        public Team GetTeam(int id)
+        public Team? GetTeam(int id)
         {
             return _context.Teams.Where(p => p.IdTeam == id).FirstOrDefault();
         }
@@ -50,7 +56,7 @@ namespace BC_BACK.Repository
             return _context.Teams.Where(p => p.IdGame == gameId).ToList();
         }
 
-        public bool isTeamExist(int id)
+        public bool IsTeamExist(int id)
         {
             return _context.Teams.Any(p => p.IdTeam == id);
         }
@@ -58,7 +64,7 @@ namespace BC_BACK.Repository
         public bool Save()
         {
             var saved = _context.SaveChanges();
-            return saved > 0 ? true : false;
+            return saved > 0;
         }
 
         public bool UpdateTeam(Team team)
@@ -75,9 +81,12 @@ namespace BC_BACK.Repository
             return Save();
         }
 
-        public int GetId(string name)
+        public int? GetId(string name)
         {
-            return _context.Teams.Where(p => name.Equals(p.Name)).FirstOrDefault().IdTeam;
+            var t = _context.Teams.Where(p => name.Equals(p.Name)).FirstOrDefault();
+            if (t == null)
+                return null;
+            return t.IdTeam;
         }
     }
 }

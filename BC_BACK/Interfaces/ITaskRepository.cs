@@ -4,10 +4,10 @@ namespace BC_BACK.Interfaces
 {
     public interface ITaskRepository
     {
-        Task GetTask(int id);
+        Task? GetTask(int id);
         ICollection<Task> GetTasks();
         ICollection<Task> GetTasksByGame(int gameId);
-        bool isTaskExist(int id);
+        bool IsTaskExist(int id);
         bool Save();
         bool CreateTask(Task task);
         bool DeleteTask(Task task);

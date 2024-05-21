@@ -70,7 +70,7 @@ namespace BC_BACK.Repository
 
         public string BoardToString(int[,] matrix)
         {
-            StringBuilder sb = new StringBuilder();
+            StringBuilder sb = new ();
 
             int rows = matrix.GetLength(0);
             int cols = matrix.GetLength(1);
@@ -100,7 +100,7 @@ namespace BC_BACK.Repository
             return Save();
         }
 
-        public Board GetBoard(int id)
+        public Board? GetBoard(int id)
         {
             return _context.Boards.Where(p => p.IdBoard == id).FirstOrDefault();
         }
@@ -115,7 +115,7 @@ namespace BC_BACK.Repository
             return _context.Boards.Where(p => p.IdGame == gameId).ToList();
         }
 
-        public bool isBoardExist(int id)
+        public bool IsBoardExist(int id)
         {
             return _context.Boards.Any(p => p.IdBoard == id);
         }
@@ -123,7 +123,7 @@ namespace BC_BACK.Repository
         public bool Save()
         {
             var saved = _context.SaveChanges();
-            return saved > 0 ? true : false;
+            return saved > 0;
         }
 
         public bool UpdateBoard(Board board)

@@ -62,7 +62,7 @@ namespace BC_BACK.Services
             foreach (var taskCreate in taskCreates)
             {
 
-                if (!_gameRepository.isGameExist(taskCreate.IdGame))
+                if (!_gameRepository.IsGameExist(taskCreate.IdGame))
                     return BadRequest("Invalid data");
 
                 var taskMap = _mapper.Map<Models.Task>(taskCreate);
@@ -87,19 +87,19 @@ namespace BC_BACK.Services
 
             foreach (var updatedTask in updatTask)
             {
-                if (!_taskRepository.isTaskExist(updatedTask.IdTask))
+                if (!_taskRepository.IsTaskExist(updatedTask.IdTask))
                     return NotFound();
 
                 var task = _taskRepository.GetTask(updatedTask.IdTask);
                 bool isUpdateNeeded = false;
 
-                if (updatedTask.Answer != task.Answer)
+                if (task != null && updatedTask.Answer != task.Answer)
                 {
                     task.Answer = updatedTask.Answer;
                     isUpdateNeeded = true;
                 }
 
-                if (updatedTask.Question != task.Question)
+                if (task != null && updatedTask.Question != task.Question)
                 {
                     task.Question = updatedTask.Question;
                     isUpdateNeeded = true;

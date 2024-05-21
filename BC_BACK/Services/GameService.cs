@@ -72,14 +72,17 @@ namespace BC_BACK.Services
 
                 var size = boards.First().Size;
 
+                var gm = _gameRepository.GetGame(id);
+                if (gm != null)
                 return Ok(new DataForUpdate
                 {
-                    Name = _gameRepository.GetGame(id).Name,
+                    Name = gm.Name,
                     Size = size,
                     NumberOfTasks = nftk,
                     NumberOfTeams = nftm,
                     IdGame = id,
                 });
+                return BadRequest();
 
             }
             catch (Exception ex)
@@ -125,14 +128,17 @@ namespace BC_BACK.Services
             if (!_gameRepository.IsGameExist(game.IdGame))
                 return NotFound();
 
-            if (!_userRepository.isUserExist(game.IdUser) || !_checkDataRepository.CheckStringLengs(dataForUpdate.Name, 20))
+            if (!_userRepository.IsUserExist(game.IdUser) || !_checkDataRepository.CheckStringLengs(dataForUpdate.Name, 20))
                 return StatusCode(422, "Invalid data");
 
+            var gm = _gameRepository.GetGame(dataForUpdate.IdGame);
+            if (gm == null)
+                return NotFound();
             var updatedGame = new GameDto
             {
                 IdGame = dataForUpdate.IdGame,
                 Name = dataForUpdate.Name,
-                IdUser = _gameRepository.GetGame(dataForUpdate.IdGame).IdUser
+                IdUser =gm.IdUser
             };
             if (!UpdateGame(game, updatedGame))
                 return StatusCode(500, "Failed to update game");
@@ -282,7 +288,7 @@ namespace BC_BACK.Services
             if (gameCreate == null || !ModelState.IsValid)
                 return BadRequest();
 
-            if (!_userRepository.isUserExist(gameCreate.IdUser))
+            if (!_userRepository.IsUserExist(gameCreate.IdUser))
                 return NotFound();
 
             if (!_checkDataRepository.CheckStringLengs(gameCreate.Name, 20))
@@ -505,13 +511,16 @@ namespace BC_BACK.Services
 
         public IActionResult AddTeam(int idTeam)
         {
-            if (_teamRepository.isTeamExist(idTeam))
+            if (_teamRepository.IsTeamExist(idTeam))
             {
                 var team = _teamRepository.GetTeam(idTeam);
-                var response = _gameManager.AddTeamToQueue(team);
-                if (response != "There is no such team in active games" && response != "Team is already in the queue")
-                    return Ok(response);
-                return BadRequest(response);
+                if (team != null)
+                {
+                    var response = _gameManager.AddTeamToQueue(team);
+                    if (response != "There is no such team in active games" && response != "Team is already in the queue")
+                        return Ok(response);
+                    return BadRequest(response);
+                }
             }
             return BadRequest("There is no such team");
         }
@@ -519,10 +528,14 @@ namespace BC_BACK.Services
         public IActionResult RemoveTeam(int idTeam)
         {
             var team = _teamRepository.GetTeam(idTeam);
-            var response = _gameManager.RemoveTeamFromQueue(team);
-            if (response != "there is no such team")
-                return Ok(response);
-            return BadRequest(response);
+            if (team != null)
+            {
+                var response = _gameManager.RemoveTeamFromQueue(team);
+                if (response != "there is no such team")
+                    return Ok(response);
+                return BadRequest(response);
+            }
+            return BadRequest();
         }
 
         public IActionResult DateGame(int idGame)
@@ -540,10 +553,14 @@ namespace BC_BACK.Services
         public IActionResult CheckCurrent(int idTeam)
         {
             var team = _teamRepository.GetTeam(idTeam);
-            var response = _gameManager.CheckCurrentTeam(team.IdGame, idTeam);
-            if (response != "There is no such team in active games")
-                return Ok(response);
-            return BadRequest(response);
+            if (team != null)
+            {
+                var response = _gameManager.CheckCurrentTeam(team.IdGame, idTeam);
+                if (response != "There is no such team in active games")
+                    return Ok(response);
+                return BadRequest(response);
+            }
+            return NotFound();
         }
 
         public IActionResult GetCurrentTeam(int idTeam, int idGame)

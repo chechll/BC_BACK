@@ -20,7 +20,7 @@ namespace BC_BACK.Controllers
             _jwtService = jwtService;
         }
 
-        private IActionResult ValidateTokenAndGetPrincipal()
+        private IActionResult? ValidateTokenAndGetPrincipal()
         {
             var token = Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
             var principal = _jwtService.GetPrincipalFromToken(token);
@@ -76,7 +76,6 @@ namespace BC_BACK.Controllers
         [ProducesResponseType(400)]
         public IActionResult CreateUser([FromBody] UserDto userCreate)
         {
-            Console.WriteLine("2",userCreate);
             return _userService.CreateUser(userCreate);
         }
 
